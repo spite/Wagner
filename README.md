@@ -11,12 +11,18 @@ Basic usage
 ----------
 
 ```js
+/*
+Include the libs
+<script src="ShaderLoader.js"></script>
+<script src="Wagner.js"></script>
+*/
+
 var shaderLoader = new ShaderLoader();
 shaderLoader.add( 'orto-vs', 'orto-vs.glsl' );
 shaderLoader.add( 'copy-fs', 'copy-fs.glsl' );
 
 var copyShader = new THREE.ShaderMaterial( {
-	uniforms: {
+    uniforms: {
 		tDiffuse: { type: 't', value: new THREE.Texture() },
 		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
 	},
