@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - render-to-texture</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #ffffff;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				background-color: #222;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#container canvas{ width: 100%; height: 100%;}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+
+<script src="js/Three.min.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/Stats.js"></script>
+<script src="js/ColladaLoader.js"></script>
+
+<script type="x-shader/x-vertex" id="vs-pumpkin">
+
+	varying vec2 vN;
+
+	void main() {
+
+		vec3 u = normalize( vec3( modelViewMatrix * vec4( position, 1.0 ) ) );
+		vec3 n = normalize( normalMatrix * normal );
+		vec3 r = reflect( u, n );
+		float m = 2.0 * sqrt( r.x * r.x + r.y * r.y + ( r.z + 1.0 ) * ( r.z+1.0 ) );
+		vN = vec2( r.x / m + 0.5,  r.y / m + 0.5 );
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+	}
+
+</script>
+
+<script type="x-shader/x-vertex" id="fs-pumpkin">
+	
+	varying vec2 vN;
+	uniform sampler2D tMatCap;
+
+	void main() {
+
+		vec4 base = texture2D( tMatCap, vN );
+		gl_FragColor = vec4( base.rgb, 1. );
+
+	}
+	
+</script>
+
+	<script type="x-shader/x-vertex" id="vertexShader">
+		
+	varying vec2 vUv;
+	varying vec3 vPosition;
+
+	void main() {
+
+		vUv = uv;
+		vPosition = vec4( modelViewMatrix * vec4( position, 1.0 ) ).rgb;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+	}
+
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_NoiseMaterial">
+	
+	vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 permute(vec4 x) {
+     return mod289(((x*34.0)+1.0)*x);
+}
+
+vec4 taylorInvSqrt(vec4 r)
+{
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+float snoise(vec3 v)
+  { 
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+// First corner
+  vec3 i  = floor(v + dot(v, C.yyy) );
+  vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+// Other corners
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min( g.xyz, l.zxy );
+  vec3 i2 = max( g.xyz, l.zxy );
+
+  //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+  //   x1 = x0 - i1  + 1.0 * C.xxx;
+  //   x2 = x0 - i2  + 2.0 * C.xxx;
+  //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+// Permutations
+  i = mod289(i); 
+  vec4 p = permute( permute( permute( 
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+// Gradients: 7x7 points over a square, mapped onto an octahedron.
+// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+  float n_ = 0.142857142857; // 1.0/7.0
+  vec3  ns = n_ * D.wyz - D.xzx;
+
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+
+  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a0.zw,h.y);
+  vec3 p2 = vec3(a1.xy,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+
+//Normalise gradients
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+
+// Mix final noise value
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+                                dot(p2,x2), dot(p3,x3) ) );
+  }
+
+	float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
+
+	varying vec2 vUv;
+	varying vec3 vPosition;
+
+	uniform sampler2D tDiffuse;
+	uniform vec2 repeat;
+	uniform float time;
+	uniform float power;
+	
+	void main() {
+
+		float mag = 2.;
+		vec3 p = vPosition;
+		vec3 c = ( snoise( .005 * p + time ) ) * vec3( mag * snoise( .0005 * p + time ), mag * snoise( .0006 * p + 500. + 1.1 * time ), mag * snoise( .0004 * p + 1000. + .9 * time ) );
+		c += .01 * vec3( random( p, 0.0 ) );
+		c = pow( c, vec3( power, power, power ) );
+		if( power > 1. ) c *= power;
+		gl_FragColor = vec4( c, 1. );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_Highlights">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform vec2 repeat;
+	
+	void main() {
+
+		vec3 c = 1. * texture2D( tDiffuse, mod( vUv * repeat, 1. ) ).rgb;
+		c = 4. * smoothstep( .05, .95, c );
+		gl_FragColor = vec4( c, 1. );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_Glow">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform sampler2D tColor;
+	
+	void main() {
+
+		vec3 a = texture2D( tDiffuse, vUv ).rgb;
+		if( length( a ) < .5 ) a = vec3( 0. );
+		gl_FragColor = vec4( a, 1. );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_Normal">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	
+	void main() {
+
+		gl_FragColor = texture2D( tDiffuse, vUv );
+	
+	}
+	
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_RGBSplit">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform float distanceX;
+	uniform float distanceY;
+
+	void main() {
+
+		vec4 c1 = texture2D( tDiffuse, vUv - vec2( distanceX, distanceY ) );
+		vec4 c2 = texture2D( tDiffuse, vUv );
+		vec4 c3 = texture2D( tDiffuse, vUv + vec2( distanceX, distanceY ) );
+		
+		gl_FragColor = vec4( c1.r, c2.g, c3.b, 1 );
+		
+	}
+	
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_ZoomBlur">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+
+	float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
+	
+	void main() {
+
+		float strength = 0.75;
+		vec2 center = .5 * resolution;
+		
+		vec4 color=vec4(0.0);
+		float total=0.0;
+		vec2 toCenter=center-vUv*resolution;
+		float offset=random(vec3(12.9898,78.233,151.7182),0.0);
+		for(float t=0.0;t<=40.0;t++){
+			float percent=(t+offset)/40.0;
+			float weight=4.0*(percent-percent*percent);
+			vec4 sample=texture2D(tDiffuse,vUv+toCenter*percent*strength/resolution);
+			sample.rgb*=sample.a;
+			color+=sample*weight;
+			total+=weight;
+		}
+		
+		gl_FragColor=texture2D( tDiffuse, vUv ) + color / total;
+		gl_FragColor.rgb /= 1.;//gl_FragColor.a+0.00001;
+		
+	}
+	
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_TriangleBlur">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform vec2 delta;
+	
+	float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
+	
+	void main() {
+	
+		vec4 color=vec4(0.0);
+		float total=0.0;
+		float offset=random(vec3(12.9898,78.233,151.7182),0.0);
+		for(float t=-30.0;t<=30.0;t++){
+			float percent=(t+offset-0.5)/30.0;
+			float weight=1.0-abs(percent);
+			vec4 sample=texture2D(tDiffuse,vUv+delta*percent);
+			sample.rgb*=sample.a;
+			color+=sample*weight;
+			total+=weight;
+		}
+		
+		gl_FragColor=color/total;
+		gl_FragColor.rgb/=gl_FragColor.a+0.00001;
+		
+	}
+
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_Art">
+	
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+	varying vec2 vUv;
+	float level( in float value, in float min, in float max ) {
+		return min / 255.0 + ( max - min ) * value / 255.0;
+	}
+	float gamma( in float value, in float g ) {
+		return pow( value, 1.0 / g );
+	}
+	void main(void) {
+		float x = 1.0 / resolution.x;
+		float y = 1.0 / resolution.y;
+		vec4 horizEdge = vec4( 0.0 );
+		horizEdge -= texture2D( tDiffuse, vec2( vUv.x - x, vUv.y - y ) ) * 1.0;
+		horizEdge -= texture2D( tDiffuse, vec2( vUv.x - x, vUv.y     ) ) * 2.0;
+		horizEdge -= texture2D( tDiffuse, vec2( vUv.x - x, vUv.y + y ) ) * 1.0;
+		horizEdge += texture2D( tDiffuse, vec2( vUv.x + x, vUv.y - y ) ) * 1.0;
+		horizEdge += texture2D( tDiffuse, vec2( vUv.x + x, vUv.y     ) ) * 2.0;
+		horizEdge += texture2D( tDiffuse, vec2( vUv.x + x, vUv.y + y ) ) * 1.0;
+		vec4 vertEdge = vec4( 0.0 );
+		vertEdge -= texture2D( tDiffuse, vec2( vUv.x - x, vUv.y - y ) ) * 1.0;
+		vertEdge -= texture2D( tDiffuse, vec2( vUv.x    , vUv.y - y ) ) * 2.0;
+		vertEdge -= texture2D( tDiffuse, vec2( vUv.x + x, vUv.y - y ) ) * 1.0;
+		vertEdge += texture2D( tDiffuse, vec2( vUv.x - x, vUv.y + y ) ) * 1.0;
+		vertEdge += texture2D( tDiffuse, vec2( vUv.x    , vUv.y + y ) ) * 2.0;
+		vertEdge += texture2D( tDiffuse, vec2( vUv.x + x, vUv.y + y ) ) * 1.0;
+		vec3 edge = sqrt((horizEdge.rgb * horizEdge.rgb) + (vertEdge.rgb * vertEdge.rgb));
+		vec3 color = texture2D( tDiffuse, vUv ).rgb;
+		float r = ( edge.r < 0.5 )?((2.0*edge.r-1.0)*(color.r-color.r*color.r)+color.r):((2.0*edge.r-1.0)*(sqrt(color.r)-color.r)+color.r);
+		float g = ( edge.g < 0.5 )?((2.0*edge.g-1.0)*(color.g-color.g*color.g)+color.g):((2.0*edge.g-1.0)*(sqrt(color.g)-color.g)+color.g);
+		float b = ( edge.b < 0.5 )?((2.0*edge.b-1.0)*(color.b-color.b*color.b)+color.b):((2.0*edge.b-1.0)*(sqrt(color.b)-color.b)+color.b);
+		r = level( r, 0.0, 255.0 ); 
+		g = level( g, 0.0, 184.0 ); 
+		b = level( b, 0.0, 113.0 ); 
+		r = gamma( r, 1.10 ); 
+		g = gamma( g, 0.95 ); 
+		b = gamma( b, 1.04 ); 
+		r = level( r, 10.0, 240.0 ); 
+		g = level( g, 10.0, 240.0 ); 
+		b = level( b, 10.0, 240.0 ); 
+		r = gamma( r, 0.87 ); 
+		g = gamma( g, 0.87 ); 
+		b = gamma( b, 0.87 ); 
+		gl_FragColor = vec4( r, g, b, 1.0 );
+	}
+
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_Vignette">
+	
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+	varying vec2 vUv;
+	
+	void main(void) {
+	
+		vec2 p = gl_FragCoord.xy / resolution.xy;
+
+		float darkness = 2.45;
+		vec2 textureCoords = p - 0.5;
+		float vignette = 1.0 - (dot(textureCoords, textureCoords) * darkness);
+		vec3 color = texture2D( tDiffuse, vUv ).rgb;
+
+		gl_FragColor = vec4( color * vignette, 1.0 );
+		
+	}
+	
+	</script>
+	
+	<script type="x-shader/x-vertex" id="fs_Pixelate">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+	uniform float amount;
+
+	void main() {
+
+		float d = 1.0 / amount;
+		float ar = resolution.x / resolution.y;
+		float u = floor( vUv.x / d ) * d;
+		d = ar / amount;
+		float v = floor( vUv.y / d ) * d;
+		gl_FragColor = texture2D( tDiffuse, vec2( u, v ) );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_Blend">
+	
+	varying vec2 vUv;
+	uniform sampler2D tColor;
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+	uniform float amount;
+
+	void main() {
+
+		vec4 a = texture2D( tDiffuse, vUv );
+		vec4 b = texture2D( tColor, vUv );
+		vec3 c = vec3( 1. ) - ( vec3( 1. ) - a.rgb ) * ( vec3( 1. ) - b.rgb );
+		c = a.rgb + 1. * b.rgb;
+		gl_FragColor = vec4( c, 1. );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_Copy">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+
+	void main() {
+
+		gl_FragColor = texture2D( tDiffuse, vUv );
+
+	}
+	
+	</script>
+
+	<script type="x-shader/x-vertex" id="fs_CGA">
+	
+	varying vec2 vUv;
+	uniform sampler2D tDiffuse;
+	uniform vec2 resolution;
+	uniform sampler2D cgaMap;
+
+	void main() {
+
+		float amount = 320.;
+		float d = 1.0 / amount;
+		float ar = resolution.x / resolution.y;
+		float sx = floor( vUv.x / d ) * d;
+		d = ar / amount;
+		float sy = floor( vUv.y / d ) * d;
+
+		vec4 base = texture2D( tDiffuse, vec2( sx, sy ) );
+
+		sx = gl_FragCoord.x * resolution.x / 8.;//floor( ( sx * resolution.x ) ) / 8.;
+		sy = gl_FragCoord.y * resolution.y / ( 8. / ar );//floor( ( sy * resolution.y ) ) / 8.;
+		
+		float lum = .2126 * base.r + .7152 * base.g + .0722 * base.b;
+		float o = floor( 7. * lum ) / 7.;
+		float x = mod( sx, 32. ) / 32.;
+		float y = 1. - ( o + ( mod( sy, 22. ) ) / 161. );
+		vec3 pattern = texture2D( cgaMap, vec2( x, y ) ).rgb;
+		base.rgb = pattern.rgb;
+
+		gl_FragColor = vec4( base.rgb, 1. );
+
+	}
+
+	</script>
+
+<script>
+
+var links = document.querySelectorAll( 'a[rel=external]' );
+for( var j = 0; j < links.length; j++ ) {
+    var a = links[ j ];
+    a.addEventListener( 'click', function( e ) {
+        window.open( this.href, '_blank' );
+        e.preventDefault();
+    }, false );
+}
+
+var container, renderer, scene, camera, mesh, rtTexture, torus, material;
+var zoomBlurShader, RGBSplitShader, blurShader, artShader, vignetteShader, pixelateShader;
+var passer, combiner;
+var fov = 70, stats;
+
+window.addEventListener( 'load', init );
+
+var model = null, boxes = [];
+function loadModel( id ) {
+
+	//loading.style.opacity = 1;
+	var loader = new THREE.ColladaLoader();
+	loader.load( id, function( res ) { 
+		if( model ) scene.remove( model );
+		for( var j = 0; j < boxes.length; j++ ) scene.remove( boxes[ j ] );
+		boxes = [];
+
+		var bBox = new THREE.Box3();
+		for( var j = 0; j < res.scene.children.length; j++ ) {
+
+			if( res.scene.children[ j ].name == 'Sphere04' || res.scene.children[ j ].name == 'inner_light' ) {
+				material = new THREE.MeshBasicMaterial( { color: 0xff8e00, emissive: 0xff8e00 } );
+			} else {
+				material = new THREE.ShaderMaterial( {
+
+					uniforms: { 
+						tMatCap: { type: 't', value: THREE.ImageUtils.loadTexture( '944_large_remake2.png' ) }
+					},
+					vertexShader: document.getElementById( 'vs-pumpkin' ).textContent,
+					fragmentShader: document.getElementById( 'fs-pumpkin' ).textContent
+					
+				} );
+
+				material.uniforms.tMatCap.value.wrapS = material.uniforms.tMatCap.value.wrapT = THREE.ClampToEdgeWrapping;
+				//material = new THREE.MeshNormalMaterial();
+			}
+
+			console.log( res.scene.children[ j ].name );
+
+			res.scene.children[ j ].material = material;
+			res.scene.children[ j ].matrixAutoUpdate = false;
+			res.scene.children[ j ].updateMatrix();
+			if( res.scene.children[ j ].geometry ) {
+				res.scene.children[ j ].geometry.computeBoundingBox();
+				bBox.expandByPoint( res.scene.children[ j ].geometry.boundingBox.min );
+				bBox.expandByPoint( res.scene.children[ j ].geometry.boundingBox.max );
+				//model.add( res.scene.children[ j ] );
+
+				var boxGeometry = new THREE.CubeGeometry( 1, 1, 1 );
+				var tBox = res.scene.children[ j ].geometry.boundingBox;
+				boxGeometry.vertices[ 0 ].set( tBox.max.x, tBox.max.y, tBox.max.z );
+				boxGeometry.vertices[ 1 ].set( tBox.max.x, tBox.max.y, tBox.min.z );
+				boxGeometry.vertices[ 2 ].set( tBox.max.x, tBox.min.y, tBox.max.z );
+				boxGeometry.vertices[ 3 ].set( tBox.max.x, tBox.min.y, tBox.min.z );
+				boxGeometry.vertices[ 4 ].set( tBox.min.x, tBox.max.y, tBox.min.z );
+				boxGeometry.vertices[ 5 ].set( tBox.min.x, tBox.max.y, tBox.max.z );
+				boxGeometry.vertices[ 6 ].set( tBox.min.x, tBox.min.y, tBox.min.z );
+				boxGeometry.vertices[ 7 ].set( tBox.min.x, tBox.min.y, tBox.max.z );
+				boxGeometry.verticesNeedUpdate = true;
+				box = new THREE.Mesh( boxGeometry, new THREE.MeshBasicMaterial( { wireframe: true }))
+				box.matrixAutoUpdate = false;
+				box.matrix = res.scene.children[ j ].matrix.clone();
+				scene.add( box );
+				boxes.push( box );
+			}
+
+		}
+		model = res.scene;
+
+		/*var boxGeometry = new THREE.CubeGeometry( 1, 1, 1 );
+
+		boxGeometry.vertices[ 0 ].set( bBox.max.x, bBox.max.y, bBox.max.z );
+		boxGeometry.vertices[ 1 ].set( bBox.max.x, bBox.max.y, bBox.min.z );
+		boxGeometry.vertices[ 2 ].set( bBox.max.x, bBox.min.y, bBox.max.z );
+		boxGeometry.vertices[ 3 ].set( bBox.max.x, bBox.min.y, bBox.min.z );
+		boxGeometry.vertices[ 4 ].set( bBox.min.x, bBox.max.y, bBox.min.z );
+		boxGeometry.vertices[ 5 ].set( bBox.min.x, bBox.max.y, bBox.max.z );
+		boxGeometry.vertices[ 6 ].set( bBox.min.x, bBox.min.y, bBox.min.z );
+		boxGeometry.vertices[ 7 ].set( bBox.min.x, bBox.min.y, bBox.max.z );
+		boxGeometry.verticesNeedUpdate = true;
+		box = new THREE.Mesh( boxGeometry, new THREE.MeshBasicMaterial( { wireframe: true }))
+		box.matrixAutoUpdate = false;
+		box.matrix = res.scene.matrix.clone();
+		scene.add( box );
+		boxes.push( box );*/
+
+		var scale = 10;
+		res.scene.scale.set( scale, scale, scale );
+		res.scene.position.set( 0, -400, 0 );
+		scene.add( res.scene );
+		//loading.style.opacity = 0;
+	} );
+
+}
+
+function ShaderPasser( source, settings ) {
+
+	var _source = source,
+		_settings = settings || {},
+		_shaders = {};
+
+	_settings.scale = _settings.scale || 1;
+
+	var _scene = new THREE.Scene();
+	var _camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+	
+	var _read = new THREE.WebGLRenderTarget( window.innerWidth / _settings.scale, window.innerHeight / _settings.scale, { 
+		minFilter: THREE.LinearFilter, 
+		magFilter: THREE.LinearFilter, 
+		format: THREE.RGBFormat 
+	} );
+	
+	var _write = _read.clone();
+
+	window.addEventListener( 'resize', _resize );
+
+	var blitShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: 0, texture: _read }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Normal' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+	
+	_source = _read;
+	
+	var _quad = new THREE.Mesh( new THREE.PlaneGeometry( 1, 1 ), blitShader );
+	_quad.position.z = -100;
+	_scene.add( _quad );
+
+	_resize();
+	
+	function _resize() {
+
+		//_read.width = _write.width = window.innerWidth / _settings.scale;
+		//_read.height = _write.height = window.innerHeight / _settings.scale;
+		_camera.projectionMatrix.makeOrthographic( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+		_quad.scale.set( window.innerWidth, window.innerHeight );
+		_quad.updateMatrix();
+
+	}
+
+	function _reset( source ) {
+	
+		_source = source?source:_read;
+		_target = _write;
+
+	}
+	
+	function _applyShader( a, b ) {
+
+		if( a instanceof THREE.Scene ) {
+			_target.width = window.innerWidth / _settings.scale;
+			_target.height = window.innerHeight / _settings.scale;
+			_settings.renderer.render( a, b, _target, true );
+
+			_quad.material.uniforms[ 'tDiffuse' ].value = _target;
+			//if( _quad.material.uniforms[ 'resolution' ] ) _quad.material.uniforms[ 'resolution' ].value.set( window.innerWidth / _settings.scale, window.innerHeight / _settings.scale );
+		} else {
+			var shader = a;
+			var uniforms = b;
+			_quad.material = shader;
+			_quad.material.uniforms[ 'tDiffuse' ].value = _source;
+			for( var j in uniforms ) {
+				_quad.material.uniforms[ j ].value = uniforms[ j ];
+			}
+			if( _quad.material.uniforms[ 'resolution' ] ) _quad.material.uniforms[ 'resolution' ].value.set( window.innerWidth / _settings.scale, window.innerHeight / _settings.scale );
+			_settings.renderer.render( _scene, _camera, _target, false );
+		}
+		
+		var tmp = _source;
+		_source = _target;
+		_target = tmp;
+		
+	}
+
+	function _blit() {
+		
+		//_quad.material.wireframe = true;
+		_settings.renderer.render( _scene, _camera );
+		
+	}
+
+	function _clone( _output ) {
+
+		_quad.material = blitShader;
+		_quad.material.uniforms[ 'tDiffuse' ].value = _source;
+		//if( _quad.material.uniforms[ 'resolution' ] ) _quad.material.uniforms[ 'resolution' ].value.set( window.innerWidth, window.innerHeight );
+		_settings.renderer.render( _scene, _camera, _output, false );
+
+	}
+	
+	return {
+	
+		pass: _applyShader,
+		blit: _blit,
+		get result(){ return _source; },
+		set source( s ){ _source = s; },
+		reset: _reset,
+		clone: _clone
+		
+	}
+	
+}
+
+var highlightMaterial, baseMaterial;
+var bkg;
+
+function init() {
+
+	container = document.getElementById( 'container' );
+	
+	scene = new THREE.Scene();
+
+	camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 1, 10000 );
+	camera.position.z = 1000;
+	scene.add( camera );
+	
+	var s = 50;
+	rtTexture = new THREE.WebGLRenderTarget( 10, 10, { 
+		minFilter: THREE.LinearFilter, 
+		magFilter: THREE.LinearFilter, 
+		format: THREE.RGBFormat 
+	} );
+
+	highlightMaterial = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: THREE.ImageUtils.loadTexture( 'text.png' ) },
+			repeat: { type: 'v2', value: new THREE.Vector2( 4, 2 ) },
+			time: { type: 'f', value: 0 },
+			power: { type: 'f', value: 1. }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_NoiseMaterial' ).textContent,
+		wrapS: THREE.RepeatWrapping,
+		wrapT: THREE.RepeatWrapping
+
+	} );
+
+	//	loadModel( 'pumpkin_closed.DAE' );
+		loadModel( 'opened_pumpkin.DAE' );
+
+	torus = new THREE.Mesh( new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), highlightMaterial );
+	//torus = new THREE.Mesh( new THREE.SphereGeometry( 200, 100, 100 ), highlightMaterial );
+	//torus = new THREE.Mesh( new THREE.CubeGeometry( 200, 200, 200 ), highlightMaterial );
+	//scene.add( torus );
+
+	bkg = new THREE.Mesh( new THREE.IcosahedronGeometry( 1000, 5 ), highlightMaterial );
+	bkg.scale.x = -1;
+	//scene.add( bkg );
+
+	copyShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Normal' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+
+	glowShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			tColor: { type: "t", value: rtTexture }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Glow' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+
+	RGBSplitShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			distanceX: { type: 'f', value: 0.0 },
+			distanceY: { type: 'f', value: 0.0 }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_RGBSplit' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+	
+	zoomBlurShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_ZoomBlur' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+		
+	} );
+	
+	blurShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			delta: { type: "v2", value: new THREE.Vector2( 0, 0 ) }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_TriangleBlur' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+		
+	} );
+
+	artShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Art' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+		
+	} );
+	
+	vignetteShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Vignette' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+		
+	} );
+	
+	pixelateShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) },
+			amount: { type: "f", value: 0 }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Pixelate' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+
+	blendShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			tColor: { type: "t", value: rtTexture },
+			//resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) },
+			//amount: { type: "f", value: 0 }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_Blend' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	} );
+
+	CGAShader = new THREE.ShaderMaterial( {
+
+		uniforms: { 
+			tDiffuse: { type: "t", value: rtTexture },
+			resolution: { type: "v2", value: new THREE.Vector2( window.innerWidth, window.innerHeight ) },
+			cgaMap: { type: "t", value: THREE.ImageUtils.loadTexture( 'pattern.png' ) }
+		},
+		vertexShader: document.getElementById( 'vertexShader' ).textContent,
+		fragmentShader: document.getElementById( 'fs_CGA' ).textContent,
+		
+		depthWrite: false,
+		depthTest: false
+
+	})
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.autoClear = false;
+	renderer.setClearColor( 0x0, 0 );
+
+	passer = new ShaderPasser( rtTexture, { renderer: renderer, scale: 4 } );
+	combiner = new ShaderPasser( rtTexture, { renderer: renderer, scale: 1 } );
+	
+	container.appendChild( renderer.domElement );
+
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	container.addEventListener( 'mousewheel', onMouseWheel, false );
+	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+	window.addEventListener( 'resize', onWindowResize, false );
+
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	container.appendChild( stats.domElement );
+	
+	render();
+	
+}
+
+function onWindowResize() {
+	var s = 1;
+	renderer.setSize( s * window.innerWidth, s * window.innerHeight );
+	camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+}
+
+function onMouseWheel( event ) {
+
+	// WebKit
+
+	if ( event.wheelDeltaY ) {
+
+		fov -= event.wheelDeltaY * 0.05;
+
+	// Opera / Explorer 9
+
+	} else if ( event.wheelDelta ) {
+
+		fov -= event.wheelDelta * 0.05;
+
+	// Firefox
+
+	} else if ( event.detail ) {
+
+		fov += event.detail * 1.0;
+
+	}
+
+	camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+	
+}
+
+var mouseX = 0, mouseY = 0;
+
+function onDocumentMouseMove( e ) {
+
+	mouseX = .5 * window.innerWidth - e.pageX;
+	mouseY = .5 * window.innerHeight - e.pageY;
+
+	mouseX *= 10;
+	mouseY *= 10;
+
+	RGBSplitShader.uniforms[ 'distanceX' ].value = .001 * mouseX;
+	RGBSplitShader.uniforms[ 'distanceY' ].value = .001 * mouseY;
+
+	pixelateShader.uniforms[ 'amount' ].value = .1 * e.pageX;
+	
+}
+
+var startTime = Date.now();
+
+function render() {
+
+	torus.rotation.y += .01;
+	bkg.rotation.y -= .005;
+	bkg.rotation.x -= .0025;
+	
+	camera.position.x += ( mouseX - camera.position.x ) * .05;
+	camera.position.y += ( - mouseY - camera.position.y ) * .05;
+	camera.lookAt( scene.position );
+
+	renderer.setClearColor( 0x0, 1 );
+
+	/*combiner.reset();
+	passer.reset();
+
+	combiner.pass( scene, camera );
+	
+	passer.pass( copyShader, { tDiffuse: combiner.result } );
+	passer.pass( glowShader, {} );
+	
+	var f = .04;//mouseX / 1000;
+	passer.pass( blurShader, { delta: new THREE.Vector2( f, 0 ) } );
+	passer.pass( blurShader, { delta: new THREE.Vector2( 0, f ) } );
+	passer.pass( zoomBlurShader, {} );
+	
+	combiner.pass( blendShader, { tColor: passer.result } );
+	//combiner.pass( CGAShader, {} );
+	combiner.blit();*/
+
+	combiner.reset();
+	combiner.pass( scene, camera );
+	combiner.pass( artShader, {} );
+	//combiner.pass( zoomBlurShader, {} );
+
+	passer.reset();
+	passer.pass( copyShader, { tDiffuse: combiner.result } );
+	var f = .04;//mouseX / 1000;
+	passer.pass( blurShader, { delta: new THREE.Vector2( f, 0 ) } );
+	passer.pass( blurShader, { delta: new THREE.Vector2( 0, f ) } );
+	//passer.pass( zoomBlurShader, {} );
+
+	combiner.pass( blendShader, { tColor: passer.result } );
+	combiner.blit();
+	
+	stats.update();
+	requestAnimationFrame( render );
+	
+}
+
+</script>
+		
+	</body>
+</html>

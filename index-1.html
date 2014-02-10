@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - render-to-texture</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #ffffff;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				background-color: #ff00ff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#container canvas{ width: 100%; height: 100%;}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+
+<script src="js/three.min.js"></script>
+<script src="ShaderPasser.js"></script>
+<script src="http://spite.github.io/rstats/rStats.js" ></script>
+
+<script>
+
+'use strict'
+
+var rS = new rStats( {
+	values: {
+		frame: { caption: 'Total frame time (ms)', over: 16 },
+        raf: { caption: 'Time since last rAF (ms)' },
+        fps: { caption: 'Framerate (FPS)', below: 30 }
+	}
+} );
+
+var links = document.querySelectorAll( 'a[rel=external]' );
+for( var j = 0; j < links.length; j++ ) {
+    var a = links[ j ];
+    a.addEventListener( 'click', function( e ) {
+        window.open( this.href, '_blank' );
+        e.preventDefault();
+    }, false );
+}
+
+var container, renderer, scene, camera, mesh, rtTexture, torus, material, fov = 70, ortoCamera;
+var model, quad2;
+var rtTexture, scene2, quad, camera2;
+
+window.addEventListener( 'load', init );
+
+function init() {
+
+	container = document.getElementById( 'container' );
+	
+	scene = new THREE.Scene();
+
+	camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 1, 10000 );
+	camera.position.z = 1000;
+	scene.add( camera );
+
+	ortoCamera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );
+
+	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+
+	container.appendChild( renderer.domElement );
+
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	container.addEventListener( 'mousewheel', onMouseWheel, false );
+	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+	window.addEventListener( 'resize', onWindowResize, false );
+
+	model = new THREE.Mesh( new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) );
+	scene.add( model );
+
+	rtTexture = new THREE.WebGLRenderTarget( 1, 1, { 
+		minFilter: THREE.LinearFilter, 
+		magFilter: THREE.NearestFilter, 
+		format: THREE.RGBAFormat
+	} );
+
+	scene2 = new THREE.Scene();
+	quad = new THREE.Mesh(
+		new THREE.PlaneGeometry( 1, 1 ),
+		new THREE.MeshBasicMaterial( { map: rtTexture, transparent: true } )
+	);
+	scene2.add( quad );
+ 
+	quad2 = new THREE.Mesh( 
+		new THREE.PlaneGeometry( 1, 1 ),
+		new THREE.MeshBasicMaterial( { color: 0xb70000 } )
+	);
+	quad2.position.z = -1;
+	scene2.add( quad2 );
+
+	onWindowResize();
+
+	render();
+	
+}
+
+function onWindowResize() {
+
+	var s = 1,
+		w = window.innerWidth,
+		h = window.innerHeight;
+
+	renderer.setSize( s * w, s * h );
+	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
+	ortoCamera.projectionMatrix.makeOrthographic( w / - 2, w / 2, h / 2, h / - 2, ortoCamera.near, ortoCamera.far );
+
+	quad.scale.set( w, h, 1 );
+	quad2.scale.set( w, h, 1 );
+
+	var rt = rtTexture.clone();
+	rt.width = window.innerWidth;
+	rt.height = window.innerHeight;
+	quad.material.map = rt;
+	rtTexture = rt;
+
+}
+
+function onMouseWheel( event ) {
+
+	// WebKit
+
+	if ( event.wheelDeltaY ) {
+
+		fov -= event.wheelDeltaY * 0.05;
+
+	// Opera / Explorer 9
+
+	} else if ( event.wheelDelta ) {
+
+		fov -= event.wheelDelta * 0.05;
+
+	// Firefox
+
+	} else if ( event.detail ) {
+
+		fov += event.detail * 1.0;
+
+	}
+
+	camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+	
+}
+
+var mouseX = 0, mouseY = 0;
+
+function onDocumentMouseMove( e ) {
+
+	mouseX = 10 * ( .5 * window.innerWidth - e.pageX );
+	mouseY = 10 * ( .5 * window.innerHeight - e.pageY );
+
+}
+
+var startTime = Date.now();
+
+function render() {
+
+	rS( 'frame' ).start();
+    rS( 'rAF' ).tick();
+    rS( 'FPS' ).frame();
+
+    model.rotation.x += .01;
+    model.rotation.y += .01;
+    model.rotation.z += .05;
+
+	camera.position.x += ( mouseX - camera.position.x ) * .05;
+	camera.position.y += ( - mouseY - camera.position.y ) * .05;
+	camera.lookAt( scene.position );
+
+	renderer.autoClearColor = true;
+	renderer.render( scene, camera, rtTexture, true );
+	renderer.autoClearColor = false;
+	renderer.render( scene2, ortoCamera );
+
+    rS( 'frame' ).end();
+    rS().update();
+
+	requestAnimationFrame( render );
+	
+}
+
+</script>
+		
+	</body>
+</html>

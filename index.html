@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Wagner - Minefield!</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #ffffff;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				background-color: #111;
+				background-image: url( escheresque_ste.png );
+				margin: 0px;
+				overflow: hidden;
+			}
+			#container canvas{ width: 100%; height: 100%;}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+
+<script src="js/three.min.js"></script>
+<script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="ShaderLoader.js"></script>
+<script src="Wagner.js"></script>
+
+<script>
+
+'use strict'
+
+var composer;
+
+var shaderLoader = new ShaderLoader();
+shaderLoader.add( 'orto-vs', 'orto-vs.glsl' );
+shaderLoader.add( 'copy-fs', 'copy-fs.glsl' );
+shaderLoader.add( 'invert-fs', 'invert-fs.glsl' );
+shaderLoader.add( 'pixelate-fs', 'pixelate-fs.glsl' );
+shaderLoader.add( 'rgb-split-fs', 'rgb-split-fs.glsl' );
+shaderLoader.add( 'zoom-blur-fs', 'zoom-blur-fs.glsl' );
+shaderLoader.add( 'box-blur-fs', 'box-blur-fs.glsl' );
+shaderLoader.add( 'bloom-fs', 'bloom-fs.glsl' );
+shaderLoader.load();
+
+var rS = new rStats( {
+	values: {
+		frame: { caption: 'Total frame time (ms)', over: 16 },
+        raf: { caption: 'Time since last rAF (ms)' },
+        fps: { caption: 'Framerate (FPS)', below: 30 }
+	}
+} );
+
+var links = document.querySelectorAll( 'a[rel=external]' );
+for( var j = 0; j < links.length; j++ ) {
+    var a = links[ j ];
+    a.addEventListener( 'click', function( e ) {
+        window.open( this.href, '_blank' );
+        e.preventDefault();
+    }, false );
+}
+
+var container, renderer, scene, camera, mesh, rtTexture, torus, material, fov = 70;
+var model, quad2;
+var rtTexture, scene2, quad, camera2;
+
+var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass;
+
+window.addEventListener( 'load', function() {
+
+	shaderLoader.onLoaded( init );
+	
+} );
+
+function init() {
+
+	container = document.getElementById( 'container' );
+	
+	scene = new THREE.Scene();
+
+	camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 1, 10000 );
+	camera.position.z = 1000;
+	scene.add( camera );
+
+	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+
+	container.appendChild( renderer.domElement );
+
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	container.addEventListener( 'mousewheel', onMouseWheel, false );
+	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+	window.addEventListener( 'resize', onWindowResize, false );
+
+	model = new THREE.Mesh( 
+		new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
+	//	new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) 
+		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( '231.jpg' ), emissive: 0xffffff } )
+	);
+	model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
+	model.material.map.repeat.set( 8, 1 );
+	scene.add( model );
+
+	var copyShader = new THREE.ShaderMaterial( {
+		uniforms: {
+			tDiffuse: { type: "t", value: new THREE.Texture() },
+			resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
+		},
+		vertexShader: shaderLoader.get( 'orto-vs' ),
+		fragmentShader: shaderLoader.get( 'copy-fs' ),
+		shading: THREE.FlatShading,
+		depthWrite: false,
+		depthTest: false,
+		transparent: true
+	} );
+
+	composer = new WAGNER.Composer( renderer, shaderLoader, copyShader );
+
+	invertPass = new WAGNER.InvertPass();
+	boxBlurPass = new WAGNER.BoxBlurPass();
+	fullBoxBlurPass = new WAGNER.FullBoxBlurPass();
+	zoomBlurPass = new WAGNER.ZoomBlurPass();
+	multiPassBloomPass = new WAGNER.MultiPassBloomPass();
+
+	onWindowResize();
+
+	render();
+	
+}
+
+function onWindowResize() {
+
+	var s = 1,
+		w = window.innerWidth,
+		h = window.innerHeight;
+
+	renderer.setSize( s * w, s * h );
+	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
+	composer.setSize( w, h );
+
+}
+
+function onMouseWheel( event ) {
+
+	// WebKit
+
+	if ( event.wheelDeltaY ) {
+
+		fov -= event.wheelDeltaY * 0.05;
+
+	// Opera / Explorer 9
+
+	} else if ( event.wheelDelta ) {
+
+		fov -= event.wheelDelta * 0.05;
+
+	// Firefox
+
+	} else if ( event.detail ) {
+
+		fov += event.detail * 1.0;
+
+	}
+
+	camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+	
+}
+
+var mouseX = 0, mouseY = 0;
+
+function onDocumentMouseMove( e ) {
+
+	mouseX = 10 * ( .5 * window.innerWidth - e.pageX );
+	mouseY = 10 * ( .5 * window.innerHeight - e.pageY );
+
+}
+
+var startTime = Date.now();
+
+function render() {
+	
+	var t = Date.now();
+
+	rS( 'frame' ).start();
+    rS( 'rAF' ).tick();
+    rS( 'FPS' ).frame();
+
+    //model.rotation.x += .01;
+    //model.rotation.y += .01;
+    //model.rotation.z += .05;
+
+	camera.position.x += ( mouseX - camera.position.x ) * .05;
+	camera.position.y += ( - mouseY - camera.position.y ) * .05;
+	camera.lookAt( scene.position );
+
+	var k = Math.sin( .002 * t ) * .02 + .02;
+	renderer.autoClearColor = true;
+	composer.reset();
+	composer.render( scene, camera );
+	//w.pass( 'rgb-split', { distance: new THREE.Vector2( .001, 0. ) } );
+	//w.pass( 'pixelate', { amount: 100 + 30 * Math.cos( .001 * t ) } );
+	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( .0, k ) } );
+	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( k, .0 ) } );
+	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( .0, k ) } );
+	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( k, .0 ) } );
+	//w.pass( 'zoom-blur', { } );
+	//w.pass( 'bloom' );
+//	w.pass( invertPass );
+	//composer.pass( fullBoxBlurPass );
+	composer.pass( multiPassBloomPass );
+	composer.pass( zoomBlurPass );
+
+//	w.pass( 'zoom-blur', { } );
+
+	composer.toScreen();
+
+    rS( 'frame' ).end();
+    rS().update();
+
+	requestAnimationFrame( render );
+	startTime = t;
+	
+}
+
+</script>
+		
+	</body>
+</html>
