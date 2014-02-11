@@ -51,18 +51,6 @@ WAGNER.Composer.prototype.linkPass = function( id, pass ) {
 
 }
 
-WAGNER.Composer.prototype.getOfflineTexture = function( w, h ){
-
-	var rtTexture = new THREE.WebGLRenderTarget( w, h, { 
-		minFilter: THREE.LinearFilter, 
-		magFilter: THREE.LinearFilter, 
-		format: THREE.RGBAFormat 
-	} );
-
-	return rtTexture;
-
-}
-
 WAGNER.Composer.prototype.swapBuffers = function() {
 
 	var t = this.write;
@@ -132,6 +120,17 @@ WAGNER.Composer.prototype.reset = function() {
 
 	this.read = this.front;
 	this.write = this.back;
+
+}
+
+WAGNER.Composer.prototype.setSource = function( src ) {
+
+	if( this.copyPass.shader instanceof THREE.ShaderMaterial ) {
+		this.quad.material = this.copyPass.shader;
+		this.quad.material.uniforms.tDiffuse.value = src;
+		this.renderer.render( this.scene, this.camera, this.write, true );
+		this.swapBuffers();
+	}
 
 }
 
@@ -333,8 +332,20 @@ WAGNER.Pass = function() {
 
 WAGNER.Pass.prototype.run = function( c ) {
 
-	//console.log( 'Pass run' );
+	console.log( 'Pass run' );
 	c.pass( this.shader );
+
+}
+
+WAGNER.Pass.prototype.getOfflineTexture = function( w, h ){
+
+	var rtTexture = new THREE.WebGLRenderTarget( w, h, { 
+		minFilter: THREE.LinearFilter, 
+		magFilter: THREE.LinearFilter, 
+		format: THREE.RGBAFormat 
+	} );
+
+	return rtTexture;
 
 }
 
@@ -514,6 +525,8 @@ WAGNER.FullBoxBlurPass.prototype.run = function( c ) {
 
 WAGNER.ZoomBlurPass = function() {
 
+	this.strength = 2;
+
 	WAGNER.Pass.call( this );
 	console.log( 'ZoomBlurPass Pass constructor' );
 	var self = this;
@@ -521,7 +534,7 @@ WAGNER.ZoomBlurPass = function() {
 		WAGNER.loadShader( 'zoom-blur-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.center.value.set( .5, .5 );
-			self.shader.uniforms.strength.value = 2;
+			self.shader.uniforms.strength.value = this.strength;
 			self.loaded = true;
 		} );
 	} );
@@ -530,12 +543,22 @@ WAGNER.ZoomBlurPass = function() {
 
 WAGNER.ZoomBlurPass.prototype = new WAGNER.Pass();
 
+WAGNER.ZoomBlurPass.prototype.run = function( c ) {
+
+	this.shader.uniforms.strength.value = this.strength;
+	c.pass( this.shader );
+
+}
+
 WAGNER.MultiPassBloomPass = function() {
 
 	WAGNER.Pass.call( this );
 	console.log( 'MultiPassBloomPass Pass constructor' );
 
-	this.tmpTexture = WAGNER.Composer.prototype.getOfflineTexture( 1 * window.innerWidth, 1 * window.innerHeight );
+	this.composer = null;
+
+	var s = .25;
+	this.tmpTexture = this.getOfflineTexture( s * window.innerWidth, s * window.innerHeight );
 	this.boxPass = new WAGNER.BoxBlurPass();
 	this.blendPass = new WAGNER.BlendPass();
 	this.loaded = true;
@@ -546,15 +569,25 @@ WAGNER.MultiPassBloomPass.prototype = new WAGNER.Pass();
 
 WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 
-	var v = 20;
+	if( !this.composer ) {
+		this.composer = new WAGNER.Composer( c.renderer );
+		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
+	}
+
+	var v = 10;
 	if( this.boxPass.shader instanceof THREE.ShaderMaterial && this.blendPass.shader instanceof THREE.ShaderMaterial ) {
+		
 		c.toTexture( this.tmpTexture );
-		this.boxPass.shader.uniforms.delta.value.set( v / c.width, 0 );
-		c.pass( this.boxPass.shader );
-		this.boxPass.shader.uniforms.delta.value.set( 0, v / c.height );
-		c.pass( this.boxPass.shader );
+
+		this.composer.reset();
+		this.composer.setSource( this.tmpTexture );
+		this.boxPass.shader.uniforms.delta.value.set( v / this.composer.width, 0 );
+		this.composer.pass( this.boxPass.shader );
+		this.boxPass.shader.uniforms.delta.value.set( 0, v / this.composer.height );
+		this.composer.pass( this.boxPass.shader );
+
 		this.blendPass.shader.uniforms.mode.value = 9;
-		this.blendPass.shader.uniforms.tDiffuse2.value = this.tmpTexture;
+		this.blendPass.shader.uniforms.tDiffuse2.value = this.composer.read;
 		c.pass( this.blendPass.shader );
 	}
 
