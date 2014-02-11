@@ -25,7 +25,6 @@
 
 <script src="js/three.min.js"></script>
 <script src="http://spite.github.io/rstats/rStats.js" ></script>
-<script src="ShaderLoader.js"></script>
 <script src="Wagner.js"></script>
 
 <script>
@@ -33,17 +32,6 @@
 'use strict'
 
 var composer;
-
-var shaderLoader = new ShaderLoader();
-shaderLoader.add( 'orto-vs', 'orto-vs.glsl' );
-shaderLoader.add( 'copy-fs', 'copy-fs.glsl' );
-shaderLoader.add( 'invert-fs', 'invert-fs.glsl' );
-shaderLoader.add( 'pixelate-fs', 'pixelate-fs.glsl' );
-shaderLoader.add( 'rgb-split-fs', 'rgb-split-fs.glsl' );
-shaderLoader.add( 'zoom-blur-fs', 'zoom-blur-fs.glsl' );
-shaderLoader.add( 'box-blur-fs', 'box-blur-fs.glsl' );
-shaderLoader.add( 'bloom-fs', 'bloom-fs.glsl' );
-shaderLoader.load();
 
 var rS = new rStats( {
 	values: {
@@ -66,11 +54,12 @@ var container, renderer, scene, camera, mesh, rtTexture, torus, material, fov = 
 var model, quad2;
 var rtTexture, scene2, quad, camera2;
 
-var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass;
+var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
+	sepiaPass, noisePass, vignettePass, vignette2Pass;
 
 window.addEventListener( 'load', function() {
 
-	shaderLoader.onLoaded( init );
+	init();
 	
 } );
 
@@ -103,26 +92,18 @@ function init() {
 	model.material.map.repeat.set( 8, 1 );
 	scene.add( model );
 
-	var copyShader = new THREE.ShaderMaterial( {
-		uniforms: {
-			tDiffuse: { type: "t", value: new THREE.Texture() },
-			resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
-		},
-		vertexShader: shaderLoader.get( 'orto-vs' ),
-		fragmentShader: shaderLoader.get( 'copy-fs' ),
-		shading: THREE.FlatShading,
-		depthWrite: false,
-		depthTest: false,
-		transparent: true
-	} );
-
-	composer = new WAGNER.Composer( renderer, shaderLoader, copyShader );
+	composer = new WAGNER.Composer( renderer );
 
 	invertPass = new WAGNER.InvertPass();
 	boxBlurPass = new WAGNER.BoxBlurPass();
 	fullBoxBlurPass = new WAGNER.FullBoxBlurPass();
 	zoomBlurPass = new WAGNER.ZoomBlurPass();
 	multiPassBloomPass = new WAGNER.MultiPassBloomPass();
+	denoisePass = new WAGNER.DenoisePass();
+	sepiaPass = new WAGNER.SepiaPass();
+	noisePass = new WAGNER.NoisePass();
+	vignettePass = new WAGNER.VignettePass();
+	vignette2Pass = new WAGNER.Vignette2Pass();
 
 	onWindowResize();
 
@@ -199,18 +180,15 @@ function render() {
 	renderer.autoClearColor = true;
 	composer.reset();
 	composer.render( scene, camera );
-	//w.pass( 'rgb-split', { distance: new THREE.Vector2( .001, 0. ) } );
-	//w.pass( 'pixelate', { amount: 100 + 30 * Math.cos( .001 * t ) } );
-	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( .0, k ) } );
-	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( k, .0 ) } );
-	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( .0, k ) } );
-	//w.pass( 'triangle-blur', { delta: new THREE.Vector2( k, .0 ) } );
-	//w.pass( 'zoom-blur', { } );
-	//w.pass( 'bloom' );
-//	w.pass( invertPass );
-	//composer.pass( fullBoxBlurPass );
-	composer.pass( multiPassBloomPass );
+//	composer.pass( invertPass );
 	composer.pass( zoomBlurPass );
+	composer.pass( multiPassBloomPass );
+//	composer.pass( denoisePass );
+//	composer.pass( fullBoxBlurPass );
+//	composer.pass( sepiaPass );
+//	composer.pass( noisePass );
+//	composer.pass( vignettePass );
+//	composer.pass( vignette2Pass );
 
 //	w.pass( 'zoom-blur', { } );
 
