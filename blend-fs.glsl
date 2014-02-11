@@ -147,6 +147,28 @@ void main() {
 
 	}
 
+	if( mode == 21 ) { // difference
+
+		gl_FragColor = abs( a - b );
+		return;
+
+	}
+
+	if( mode == 22 ) { // exclusion
+
+		gl_FragColor = a + b - 2. * a * b;
+		
+	}
+
+	if( mode == 23 ) { // substract
+
+	}
+
+	if( mode == 24 ) { // divide
+
+	}
+
+
 	gl_FragColor = vec4( 1., 0., 1., 1. );
 
 }
