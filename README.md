@@ -13,28 +13,10 @@ Basic usage
 ```js
 /*
 Include the libs
-<script src="ShaderLoader.js"></script>
 <script src="Wagner.js"></script>
 */
 
-var shaderLoader = new ShaderLoader();
-shaderLoader.add( 'orto-vs', 'orto-vs.glsl' );
-shaderLoader.add( 'copy-fs', 'copy-fs.glsl' );
-
-var copyShader = new THREE.ShaderMaterial( {
-    uniforms: {
-		tDiffuse: { type: 't', value: new THREE.Texture() },
-		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
-	},
-	vertexShader: shaderLoader.get( 'orto-vs' ),
-	fragmentShader: shaderLoader.get( 'copy-fs' ),
-	shading: THREE.FlatShading,
-	depthWrite: false,
-	depthTest: false,
-	transparent: true
-} );
-
-var composer = new WAGNER.Composer( renderer, shaderLoader, copyShader );
+var composer = new WAGNER.Composer( renderer );
 
 var zoomBlurPass = new WAGNER.ZoomBlurPass();
 var multiPassBloomPass = new WAGNER.MultiPassBloomPass();
@@ -60,13 +42,14 @@ What works
     - Box Blur: single pass, blur in one direction specified in vec2 delta uniform
     - Full Box Blur: multipass, 2 box blur in two directions
     - Zoom Blur: single pass
+    - Sepia, Noise, Denoise, Vignette
     - Multi Pass Bloom: multipass, applies blur and blends with Screen mode
 - uniform reflection from GLSL source is working enough to be usable for most cases
 
 What still doesn't work / needs work
 ------------------------------------
 
-- ShaderLoader will probably be removed, or be transparent to the user
+- ~~ShaderLoader will probably be removed, or be transparent to the user~~
 - Passing parameters to WAGNER.ShaderPass from main code
 - Correct use of textures of different dimensions along the chain
 - Multiple Composers working at the same time
