@@ -57,3 +57,10 @@ What still doesn't work / needs work
 - Shaders that haven't even been ported to WAGNER: SSAO, DOF, camera motion blur, directional blur, gamma, levels, edge detection
 - Alias definition of passes (previously loadPass()) legacy
 - uniform reflection from GLSL source doesn't support structures (I don't even know if WebGL supports structures)
+
+Credits
+-------
+
+Composer following the work of alteredq's [THREE.EffectComposer](https://github.com/mrdoob/three.js/blob/master/examples/js/postprocessing/EffectComposer.js)
+
+Most of the shaders are from [https://github.com/evanw/glfx.js](https://github.com/evanw/glfx.js). Others are from different sources and forums, papers, or my own.
