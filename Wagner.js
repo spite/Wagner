@@ -1,9 +1,12 @@
 var WAGNER = WAGNER || {};
 
-WAGNER.Composer = function( renderer ) {
+WAGNER.Composer = function( renderer, settings ) {
 
 	this.width = 1;
 	this.height = 1;
+
+	this.settings = settings || {};
+	this.useRGBA = this.settings.useRGBA || false;
 
 	this.renderer = renderer;
 	this.copyPass = new WAGNER.CopyPass();
@@ -11,7 +14,7 @@ WAGNER.Composer = function( renderer ) {
 	this.scene = new THREE.Scene();
 	this.quad = new THREE.Mesh(
 		new THREE.PlaneGeometry( 1, 1 ),
-		new THREE.MeshBasicMaterial()
+		this.defaultMaterial
 	);
 	this.scene.add( this.quad );
 	this.camera = new THREE.OrthographicCamera( 1, 1, 1, 1, -10000, 10000 );
@@ -19,17 +22,13 @@ WAGNER.Composer = function( renderer ) {
 	this.front = new THREE.WebGLRenderTarget( 1, 1, { 
 		minFilter: THREE.LinearFilter, 
 		magFilter: THREE.LinearFilter, 
-		format: THREE.RGBAFormat 
+		format: this.useRGBA?THREE.RGBAFormat:THREE.RGBFormat
 	} );
 	
 	this.back = this.front.clone();
 
-	this.read = this.front;
-	this.write = this.back;
-
 	this.passes = {};
 
-	this.redTexture = THREE.ImageUtils.loadTexture( 'test.jpg' );
 }
 
 WAGNER.Composer.prototype.linkPass = function( id, pass ) {
@@ -53,6 +52,9 @@ WAGNER.Composer.prototype.linkPass = function( id, pass ) {
 
 WAGNER.Composer.prototype.swapBuffers = function() {
 
+	this.output = this.write;
+	this.input = this.read;
+
 	var t = this.write;
 	this.write = this.read;
 	this.read = t;
@@ -61,7 +63,7 @@ WAGNER.Composer.prototype.swapBuffers = function() {
 
 WAGNER.Composer.prototype.render = function( scene, camera ) {
 
-	if( this.copyPass.shader instanceof THREE.ShaderMaterial ) {
+	if( this.copyPass.isLoaded() ) {
 		this.renderer.render( scene, camera, this.write, true );
 		this.quad.material = this.copyPass.shader;
 		this.quad.material.uniforms.tDiffuse.value = this.write;
@@ -73,7 +75,7 @@ WAGNER.Composer.prototype.render = function( scene, camera ) {
 
 WAGNER.Composer.prototype.toScreen = function() {
 
-	if( this.copyPass.shader instanceof THREE.ShaderMaterial ) {
+	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
 		this.quad.material.uniforms.tDiffuse.value = this.read;
 		this.quad.material.uniforms.resolution.value.set( this.width, this.height );
@@ -84,7 +86,7 @@ WAGNER.Composer.prototype.toScreen = function() {
 
 WAGNER.Composer.prototype.toTexture = function( t ) {
 
-	if( this.copyPass.shader instanceof THREE.ShaderMaterial ) {
+	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
 		this.quad.material.uniforms.tDiffuse.value = this.read;
 		this.renderer.render( this.scene, this.camera, t, true );
@@ -101,7 +103,7 @@ WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 		this.quad.material = pass;
 	}
 	if( pass instanceof WAGNER.Pass ) {
-		if( !pass.loaded ) return;
+		if( !pass.isLoaded() ) return;
 		pass.run( this );
 		return;
 	}
@@ -121,11 +123,14 @@ WAGNER.Composer.prototype.reset = function() {
 	this.read = this.front;
 	this.write = this.back;
 
+	this.output = this.write;
+	this.input = this.read;
+
 }
 
 WAGNER.Composer.prototype.setSource = function( src ) {
 
-	if( this.copyPass.shader instanceof THREE.ShaderMaterial ) {
+	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
 		this.quad.material.uniforms.tDiffuse.value = src;
 		this.renderer.render( this.scene, this.camera, this.write, true );
@@ -233,6 +238,9 @@ WAGNER.Composer.prototype.setSize = function( w, h ) {
 
 }
 
+WAGNER.Composer.prototype.defaultMaterial = new THREE.MeshBasicMaterial();
+
+
 WAGNER.loadShader = function( file, callback ) {
 
 	var oReq = new XMLHttpRequest();
@@ -325,8 +333,8 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 WAGNER.Pass = function() {
 
 	console.log( 'Pass constructor' );
-	this.shader = new THREE.MeshBasicMaterial();
-	this.loaded = false;
+	this.shader = null;
+	this.loaded = null;
 
 }
 
@@ -337,12 +345,24 @@ WAGNER.Pass.prototype.run = function( c ) {
 
 }
 
+WAGNER.Pass.prototype.isLoaded = function() {
+	
+	if( this.loaded === null ) {
+		if( this.shader instanceof THREE.ShaderMaterial ) {
+			this.loaded = true;
+		}
+	} else {
+		return this.loaded;
+	}
+
+}
+
 WAGNER.Pass.prototype.getOfflineTexture = function( w, h ){
 
 	var rtTexture = new THREE.WebGLRenderTarget( w, h, { 
 		minFilter: THREE.LinearFilter, 
 		magFilter: THREE.LinearFilter, 
-		format: THREE.RGBAFormat 
+		format: this.useRGBA?THREE.RGBAFormat:THREE.RGBFormat
 	} );
 
 	return rtTexture;
@@ -357,7 +377,6 @@ WAGNER.CopyPass = function() {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( 'copy-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.loaded = true;
 		} );
 	} );
 
@@ -374,7 +393,6 @@ WAGNER.BlendPass = function() {
 		WAGNER.loadShader( 'blend-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.mode.value = 1;
-			self.loaded = true;
 		} );
 	} );
 
@@ -390,7 +408,6 @@ WAGNER.InvertPass = function() {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( 'invert-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.loaded = true;
 		} );
 	} );
 
@@ -407,7 +424,6 @@ WAGNER.SepiaPass = function() {
 		WAGNER.loadShader( 'sepia-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.amount.value = 1.;
-			self.loaded = true;
 		} );
 	} );
 
@@ -424,7 +440,6 @@ WAGNER.NoisePass = function() {
 		WAGNER.loadShader( 'noise-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.amount.value = .1;
-			self.loaded = true;
 		} );
 	} );
 
@@ -442,7 +457,6 @@ WAGNER.VignettePass = function() {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.amount.value = 1;
 			self.shader.uniforms.size.value = .1;
-			self.loaded = true;
 		} );
 	} );
 
@@ -458,7 +472,6 @@ WAGNER.Vignette2Pass = function() {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( 'vignette2-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.loaded = true;
 		} );
 	} );
 
@@ -476,7 +489,6 @@ WAGNER.DenoisePass = function() {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.exponent.value = 5;
 			self.shader.uniforms.strength.value = 10;
-			self.loaded = true;
 		} );
 	} );
 
@@ -492,7 +504,6 @@ WAGNER.BoxBlurPass = function() {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( 'box-blur-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.loaded = true;
 		} );
 	} );
 
@@ -505,21 +516,27 @@ WAGNER.FullBoxBlurPass = function() {
 	WAGNER.Pass.call( this );
 	console.log( 'FullBoxBlurPass Pass constructor' );
 	this.boxPass = new WAGNER.BoxBlurPass();
-	this.loaded = true;
 
 }
 
 WAGNER.FullBoxBlurPass.prototype = new WAGNER.Pass();
 
+WAGNER.FullBoxBlurPass.prototype.isLoaded = function() {
+
+	if( this.boxPass.isLoaded() ) {
+		this.loaded = true;
+	}
+	return WAGNER.Pass.prototype.isLoaded.call( this );
+
+}
+
 WAGNER.FullBoxBlurPass.prototype.run = function( c ) {
 
 	var v = 20;
-	if( this.boxPass.shader instanceof THREE.ShaderMaterial ) {
-		this.boxPass.shader.uniforms.delta.value.set( v / c.width, 0 );
-		c.pass( this.boxPass.shader );
-		this.boxPass.shader.uniforms.delta.value.set( 0, v / c.height );
-		c.pass( this.boxPass.shader );
-	}
+	this.boxPass.shader.uniforms.delta.value.set( v / c.width, 0 );
+	c.pass( this.boxPass.shader );
+	this.boxPass.shader.uniforms.delta.value.set( 0, v / c.height );
+	c.pass( this.boxPass.shader );
 
 }
 
@@ -535,7 +552,6 @@ WAGNER.ZoomBlurPass = function() {
 			self.shader = WAGNER.processShader( vs, fs );
 			self.shader.uniforms.center.value.set( .5, .5 );
 			self.shader.uniforms.strength.value = this.strength;
-			self.loaded = true;
 		} );
 	} );
 
@@ -558,37 +574,64 @@ WAGNER.MultiPassBloomPass = function() {
 	this.composer = null;
 
 	var s = .25;
-	this.tmpTexture = this.getOfflineTexture( s * window.innerWidth, s * window.innerHeight );
+	this.tmpTexture = this.getOfflineTexture( 512, 512 );//s * window.innerWidth, s * window.innerHeight );
 	this.boxPass = new WAGNER.BoxBlurPass();
 	this.blendPass = new WAGNER.BlendPass();
-	this.loaded = true;
+	this.zoomBlur = new WAGNER.ZoomBlurPass();
 
 }
 
 WAGNER.MultiPassBloomPass.prototype = new WAGNER.Pass();
 
+WAGNER.MultiPassBloomPass.prototype.isLoaded = function() {
+
+	if( this.boxPass.isLoaded() && 
+		this.blendPass.isLoaded() &&
+		this.zoomBlur.isLoaded() ) {
+		this.loaded = true;
+	}
+	return WAGNER.Pass.prototype.isLoaded.call( this );
+
+}
+
 WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 
 	if( !this.composer ) {
-		this.composer = new WAGNER.Composer( c.renderer );
+		this.composer = new WAGNER.Composer( c.renderer, { useRGBA: true } );
 		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
 	}
 
-	var v = 10;
-	if( this.boxPass.shader instanceof THREE.ShaderMaterial && this.blendPass.shader instanceof THREE.ShaderMaterial ) {
-		
-		c.toTexture( this.tmpTexture );
+	var v = 5;
 
-		this.composer.reset();
-		this.composer.setSource( this.tmpTexture );
-		this.boxPass.shader.uniforms.delta.value.set( v / this.composer.width, 0 );
-		this.composer.pass( this.boxPass.shader );
-		this.boxPass.shader.uniforms.delta.value.set( 0, v / this.composer.height );
-		this.composer.pass( this.boxPass.shader );
+	this.composer.reset();
+	this.composer.setSource( c.output );
+	this.boxPass.shader.uniforms.delta.value.set( v / this.composer.width, 0 );
+	this.composer.pass( this.boxPass.shader );
+	this.boxPass.shader.uniforms.delta.value.set( 0, v / this.composer.height );
+	this.composer.pass( this.boxPass.shader );
 
-		this.blendPass.shader.uniforms.mode.value = 9;
-		this.blendPass.shader.uniforms.tDiffuse2.value = this.composer.read;
-		c.pass( this.blendPass.shader );
-	}
+	this.composer.pass( this.zoomBlur );
+
+	this.blendPass.shader.uniforms.mode.value = 9;
+	this.blendPass.shader.uniforms.tDiffuse2.value = this.composer.output;
+	c.pass( this.blendPass.shader );
 
 }
+
+WAGNER.CGAPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'CGA Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'cga-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+			self.shader.uniforms.cgaMap.value = THREE.ImageUtils.loadTexture( 'pattern.png' );
+			self.shader.uniforms.cgaMap.value.minFilter = 
+			self.shader.uniforms.cgaMap.value.magFilter = THREE.NearestFilter;
+		} );
+	} );
+
+}
+
+WAGNER.CGAPass.prototype = new WAGNER.Pass();
