@@ -1,12 +1,12 @@
-var WAGNER = WAGNER || {};
+var WAGNER = WAGNER || {};
 
 WAGNER.Composer = function( renderer, settings ) {
 
 	this.width = 1;
 	this.height = 1;
 
-	this.settings = settings || {};
-	this.useRGBA = this.settings.useRGBA || false;
+	this.settings = settings || {};
+	this.useRGBA = this.settings.useRGBA || false;
 
 	this.renderer = renderer;
 	this.copyPass = new WAGNER.CopyPass();
@@ -41,12 +41,12 @@ WAGNER.Composer.prototype.linkPass = function( id, pass ) {
 		};
 	}
 	
-	if( this.passes[ id ] ) {
+	if( this.passes[ id ] ) {
 		throw new WagnerLoadPassException( id, pass );
 		return;
 	}
 
-	this.passes[ id ] = pass;
+	this.passes[ id ] = pass;
 
 }
 
@@ -110,7 +110,7 @@ WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 
 	this.quad.material.uniforms.tDiffuse.value = this.read;
 	for( var j in uniforms ) {
-		this.quad.material.uniforms[ j ].value = uniforms[ j ];
+		this.quad.material.uniforms[ j ].value = uniforms[ j ];
 	}
 	this.quad.material.uniforms.resolution.value.set( this.width, this.height );
 	this.renderer.render( this.scene, this.camera, this.write, false );
@@ -147,28 +147,28 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 
 	var typesMap = {
 		
-		sampler2D: { type: 't', value: function() { return new THREE.Texture() } },
-		samplerCube: { type: 't', value: function() {} },
+		sampler2D: { type: 't', value: function() { return new THREE.Texture() } },
+		samplerCube: { type: 't', value: function() {} },
 
-		bool: { type: 'b', value: function() { return 0; } },
-		int: { type: 'i', value: function() { return 0; } },
-		float: { type: 'f', value: function() { return 0; } },
+		bool: { type: 'b', value: function() { return 0; } },
+		int: { type: 'i', value: function() { return 0; } },
+		float: { type: 'f', value: function() { return 0; } },
 		
-		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		vec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		vec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		vec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		vec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		bvec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		bvec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		bvec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		bvec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		bvec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		bvec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		ivec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		ivec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		ivec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		ivec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		ivec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		ivec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		mat2: { type: 'v2', value: function() { return new THREE.Matrix2() } },
-		mat3: { type: 'v2', value: function() { return new THREE.Matrix3() } },
-		mat4: { type: 'v2', value: function() { return new THREE.Matrix4() } }
+		mat2: { type: 'v2', value: function() { return new THREE.Matrix2() } },
+		mat3: { type: 'v2', value: function() { return new THREE.Matrix3() } },
+		mat4: { type: 'v2', value: function() { return new THREE.Matrix4() } }
 
 	}
 
@@ -182,9 +182,9 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 			regExp.lastIndex++;
 		}
 		var uniformType = matches[ 1 ],
-			uniformName = matches[ 2 ];
+			uniformName = matches[ 2 ];
 		console.log( '  > ', uniformType, uniformName );
-		uniforms[ uniformName ] = {
+		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
 		};
@@ -195,9 +195,9 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 			regExp.lastIndex++;
 		}
 		var uniformType = matches[ 1 ],
-			uniformName = matches[ 2 ];
+			uniformName = matches[ 2 ];
 		console.log( '  > ', uniformType, uniformName );
-		uniforms[ uniformName ] = {
+		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
 		};
@@ -260,28 +260,28 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	var typesMap = {
 		
-		sampler2D: { type: 't', value: function() { return new THREE.Texture() } },
-		samplerCube: { type: 't', value: function() {} },
+		sampler2D: { type: 't', value: function() { return new THREE.Texture() } },
+		samplerCube: { type: 't', value: function() {} },
 
-		bool: { type: 'b', value: function() { return 0; } },
-		int: { type: 'i', value: function() { return 0; } },
-		float: { type: 'f', value: function() { return 0; } },
+		bool: { type: 'b', value: function() { return 0; } },
+		int: { type: 'i', value: function() { return 0; } },
+		float: { type: 'f', value: function() { return 0; } },
 		
-		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		vec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		vec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		vec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		vec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		bvec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		bvec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		bvec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		bvec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		bvec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		bvec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		ivec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		ivec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		ivec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		ivec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
+		ivec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
+		ivec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
 
-		mat2: { type: 'v2', value: function() { return new THREE.Matrix2() } },
-		mat3: { type: 'v2', value: function() { return new THREE.Matrix3() } },
-		mat4: { type: 'v2', value: function() { return new THREE.Matrix4() } }
+		mat2: { type: 'v2', value: function() { return new THREE.Matrix2() } },
+		mat3: { type: 'v2', value: function() { return new THREE.Matrix3() } },
+		mat4: { type: 'v2', value: function() { return new THREE.Matrix4() } }
 
 	}
 
@@ -295,9 +295,9 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 			regExp.lastIndex++;
 		}
 		var uniformType = matches[ 1 ],
-			uniformName = matches[ 2 ];
+			uniformName = matches[ 2 ];
 		console.log( '  > ', uniformType, uniformName );
-		uniforms[ uniformName ] = {
+		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
 		};
@@ -308,9 +308,9 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 			regExp.lastIndex++;
 		}
 		var uniformType = matches[ 1 ],
-			uniformName = matches[ 2 ];
+			uniformName = matches[ 2 ];
 		console.log( '  > ', uniformType, uniformName );
-		uniforms[ uniformName ] = {
+		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
 		};
@@ -597,7 +597,7 @@ WAGNER.MultiPassBloomPass.prototype.isLoaded = function() {
 WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 
 	if( !this.composer ) {
-		this.composer = new WAGNER.Composer( c.renderer, { useRGBA: true } );
+		this.composer = new WAGNER.Composer( c.renderer, { useRGBA: true } );
 		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
 	}
 
@@ -626,9 +626,7 @@ WAGNER.CGAPass = function() {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( 'cga-fs.glsl', function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.cgaMap.value = THREE.ImageUtils.loadTexture( 'pattern.png' );
-			self.shader.uniforms.cgaMap.value.minFilter = 
-			self.shader.uniforms.cgaMap.value.magFilter = THREE.NearestFilter;
+			self.shader.uniforms.pixelDensity.value = window.devicePixelRatio;
 		} );
 	} );
 

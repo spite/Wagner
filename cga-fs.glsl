@@ -2,10 +2,11 @@ varying vec2 vUv;
 uniform sampler2D tDiffuse;
 uniform vec2 resolution;
 uniform sampler2D cgaMap;
+uniform float pixelDensity;
 
 void main() {
 
-	float size = 4.;
+	float size = 2. * pixelDensity;
 	float dSize = 2. * size;
 
 	float amount = resolution.x / size;
