@@ -80,6 +80,7 @@ void main() {
 	if( mode == 9 ) { // screen
 
 		gl_FragColor = vec4( 1. ) - ( vec4( 1. ) - a ) * ( vec4( 1. ) - b );
+		
 		return;
 	}
 
@@ -150,6 +151,7 @@ void main() {
 	if( mode == 21 ) { // difference
 
 		gl_FragColor = abs( a - b );
+		gl_FragColor.a = a.a + a.b;
 		return;
 
 	}
