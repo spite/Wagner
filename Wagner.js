@@ -669,7 +669,7 @@ WAGNER.DirtPass.prototype.isLoaded = function() {
 
 WAGNER.DirtPass.prototype.run = function( c ) {
 
-	this.blendPass.shader.uniforms.mode.value = 13;
+	this.blendPass.shader.uniforms.mode.value = 14;
 	this.blendPass.shader.uniforms.tDiffuse2.value = this.dirtTexture;
 	c.pass( this.blendPass.shader );
 
@@ -711,7 +711,7 @@ WAGNER.GuidedFullBoxBlurPass.prototype.isLoaded = function() {
 
 WAGNER.GuidedFullBoxBlurPass.prototype.run = function( c ) {
 
-	var v = 40;
+	var v = 20;
 	this.guidedBoxPass.shader.uniforms.invertBiasMap.value = 0;
 	this.guidedBoxPass.shader.uniforms.delta.value.set( v / c.width, 0 );
 	c.pass( this.guidedBoxPass.shader );
@@ -719,3 +719,19 @@ WAGNER.GuidedFullBoxBlurPass.prototype.run = function( c ) {
 	c.pass( this.guidedBoxPass.shader );
 
 }
+
+WAGNER.SSAOPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'SSAOPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'ssao-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+		} );
+	} );
+
+}
+
+WAGNER.SSAOPass.prototype = new WAGNER.Pass();
+
