@@ -17,11 +17,14 @@
 				overflow: hidden;
 			}
 			#container canvas{ width: 100%; height: 100%;}
+			#fullscreenBtn{ position: absolute; right: 10px; top: 10px; color :white; border: 1px solid white; border-radius: 4px; padding: 20px; text-decoration: none;}
+			#fullscreenBtn:hover{ color: black; background-color: white;}
 		</style>
 	</head>
 	<body>
 
 		<div id="container"></div>
+		<a href="#" id="fullscreenBtn" >Go fullscreen</a>
 
 <script src="js/three.min.js"></script>
 <script src="http://spite.github.io/rstats/rStats.js" ></script>
@@ -54,7 +57,28 @@ var container, renderer, scene, camera, mesh, torus, material, fov = 70;
 var model, quad;
 
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
-	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass;
+	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, edgeDetectionPass,
+	dirtPass, blendPass, guidedFullBoxBlurPass;
+
+var tmpTexture;
+var depthMaterial = new THREE.MeshDepthMaterial();
+var modelMaterial = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'util.png' ), emissive: 0xffffff, wireframe: false } )
+
+
+var c = document.body;
+document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( e ) {
+	c.onwebkitfullscreenchange = function(e) {
+		c.onwebkitfullscreenchange = function() {
+		};
+	};
+	c.onmozfullscreenchange = function(e) {
+		c.onmozfullscreenchange = function() {
+		};
+	};
+	if( c.webkitRequestFullScreen ) c.webkitRequestFullScreen();
+	if( c.mozRequestFullScreen ) c.mozRequestFullScreen();
+	e.preventDefault();
+}, false );
 
 window.addEventListener( 'load', function() {
 
@@ -72,7 +96,7 @@ function init() {
 	camera.position.z = 1000;
 	scene.add( camera );
 
-	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 	container.appendChild( renderer.domElement );
@@ -82,27 +106,36 @@ function init() {
 	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	/*var loader = new THREE.JSONLoader();
-	loader.load( 'teapot.js', function( data ) { 
-		data.computeVertexNormals();
-		THREE.GeometryUtils.center( data );
-		model = new THREE.Mesh( 
-			data,
-			new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading })
-		);
-		model.scale.set ( 10, 10, 10 );
-		scene.add( model );
-	} );*/
+	var useTeapot = false;
 
-	model = new THREE.Mesh( 
-		new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
-	//	new THREE.IcosahedronGeometry( 300, 3 ), 
-	//	new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) 
-		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( '231 2.jpg' ), emissive: 0xffffff } )
-	);
-	model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
-	model.material.map.repeat.set( 4, 2 );
-	scene.add( model );
+	if( useTeapot ) {
+		
+		var loader = new THREE.JSONLoader();
+		loader.load( 'teapot.js', function( data ) { 
+			data.computeCentroids();
+			data.computeFaceNormals();
+			data.computeVertexNormals();
+			THREE.GeometryUtils.center( data );
+			model = new THREE.Mesh( 
+				data,
+				modelMaterial
+			);
+			model.scale.set ( 10, 10, 10 );
+			scene.add( model );
+		} );
+
+	} else {
+
+		model = new THREE.Mesh( 
+			new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
+			modelMaterial
+		);
+		model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
+		model.material.map.repeat.set( 4, 2 );
+		model.scale.set( 4, 4,4 );
+		scene.add( model );
+
+	}
 
 	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 
@@ -117,6 +150,10 @@ function init() {
 	vignettePass = new WAGNER.VignettePass();
 	vignette2Pass = new WAGNER.Vignette2Pass();
 	CGAPass = new WAGNER.CGAPass();
+	edgeDetectionPass = new WAGNER.EdgeDetectionPass();
+	dirtPass = new WAGNER.DirtPass();
+	blendPass = new WAGNER.BlendPass();
+	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
 
 	onWindowResize();
 
@@ -133,6 +170,7 @@ function onWindowResize() {
 	renderer.setSize( s * w, s * h );
 	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
 	composer.setSize( w, h );
+	tmpTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
 
 }
 
@@ -190,10 +228,17 @@ function render() {
 	camera.position.y += ( - mouseY - camera.position.y ) * .05;
 	camera.lookAt( scene.position );
 
+	model.material = depthMaterial;
+
 	var k = Math.sin( .002 * t ) * .02 + .02;
 	renderer.autoClearColor = true;
 	composer.reset();
 	composer.render( scene, camera );
+	composer.toTexture( tmpTexture );
+
+	model.material = modelMaterial;
+	composer.render( scene, camera );
+
 //	composer.pass( invertPass );
 //	composer.pass( zoomBlurPass );
 //	composer.pass( multiPassBloomPass );
@@ -204,7 +249,14 @@ function render() {
 //	composer.pass( vignettePass );
 //	composer.pass( vignette2Pass );
 //	composer.pass( CGAPass );
+//	composer.pass( edgeDetectionPass );
+	
+	if( guidedFullBoxBlurPass.isLoaded() ) {
+		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = tmpTexture;
+	}
+	composer.pass( guidedFullBoxBlurPass );
 	composer.pass( multiPassBloomPass );
+	composer.pass( dirtPass );
 
 	composer.toScreen();
 
