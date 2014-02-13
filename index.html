@@ -7,28 +7,37 @@
 		<style>
 			body {
 				color: #ffffff;
-				font-family:Monospace;
+				font-family: 'roboto condensed', tahoma;
 				font-size:13px;
-				text-align:center;
-				font-weight: bold;
+				text-align: left;
+				font-weight: 100;
 				background-color: #111;
 				background-image: url( escheresque_ste.png );
 				margin: 0px;
 				overflow: hidden;
 			}
 			#container canvas{ width: 100%; height: 100%;}
-			#fullscreenBtn{ position: absolute; right: 10px; top: 10px; color :white; border: 1px solid white; border-radius: 4px; padding: 20px; text-decoration: none;}
+			#fullscreenBtn{ position: absolute; right: 10px; top: 10px; color :white; border: 1px solid white; border-radius: 4px; padding: 10px 20px; background-color: black; text-decoration: none;}
 			#fullscreenBtn:hover{ color: black; background-color: white;}
+			#about{ position: absolute; left: 10px; bottom: 10px; background-color: #000; padding: 10px;}
+			a{ color: #b70000;}
 		</style>
+		<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
 	</head>
 	<body>
 
 		<div id="container"></div>
 		<a href="#" id="fullscreenBtn" >Go fullscreen</a>
+		<div id="about" >This is the minefield playground for Wagner, a new composer for three.js.<br/>
+		Check out the repo here <a href="https://github.com/spite/Wagner" >https://github.com/spite/Wagner</a> and contribute,<br/>
+		open an issue, suggest your ideas. <b>This is extremely work in progress!</b><br/>
+		Made with and for <a href="http://threejs.org/" >three.js</a> | Stats by <a href="http://spite.github.io/rstats/" >rStats</a> | <a href="http://www.twitter.com/thespite">@thespite</a> | <a href="http://www.clicktorelease.com">clicktorelease.com</a></div>
 
 <script src="js/three.min.js"></script>
+<!--<script src="js/OculusRiftEffect.js"></script>-->
 <script src="http://spite.github.io/rstats/rStats.js" ></script>
 <script src="Wagner.js"></script>
+<script src="ShaderLoader.js"></script>
 
 <script>
 
@@ -41,7 +50,10 @@ var rS = new rStats( {
 		frame: { caption: 'Total frame time (ms)', over: 16 },
         raf: { caption: 'Time since last rAF (ms)' },
         fps: { caption: 'Framerate (FPS)', below: 30 }
-	}
+	},
+	groups: [
+		{ caption: 'Frame', values: [ 'frame', 'raf', 'fps' ] }
+	]
 } );
 
 var links = document.querySelectorAll( 'a[rel=external]' );
@@ -54,16 +66,39 @@ for( var j = 0; j < links.length; j++ ) {
 }
 
 var container, renderer, scene, camera, mesh, torus, material, fov = 70;
-var model, quad;
+var model, quad, oculusEffect;
 
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
 	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, edgeDetectionPass,
-	dirtPass, blendPass, guidedFullBoxBlurPass;
+	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass;
 
-var tmpTexture;
+var depthTexture, normalTexture, colorTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
-var modelMaterial = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'util.png' ), emissive: 0xffffff, wireframe: false } )
+var modelMaterial = new THREE.MeshPhongMaterial( { 
+	map: THREE.ImageUtils.loadTexture( '1324.jpg' ), 
+	normalMap: THREE.ImageUtils.loadTexture( '1324-normal.jpg' ),
+	normalScale: new THREE.Vector2( .8, -.8 ),
+	shininess: 10,
+	specular: 0xffffff,
+	wireframe: false
+} )
+//modelMaterial = new THREE.MeshNormalMaterial();
 
+var sL = new ShaderLoader()
+sL.add( 'orto-vs', 'orto-vs.glsl' );
+sL.add( 'depth-fs', 'packed-depth-fs.glsl' );
+sL.load();
+sL.onLoaded( function() {
+	depthMaterial = new THREE.ShaderMaterial( {
+		uniforms: {
+			mNear: { type: 'f', value: 1 },
+			mFar: { type: 'f', value: 10000 }
+		},
+		vertexShader: sL.get( 'orto-vs' ),
+		fragmentShader: sL.get( 'depth-fs' ),
+		shading: THREE.FlatShading
+	} );
+} );
 
 var c = document.body;
 document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( e ) {
@@ -99,6 +134,9 @@ function init() {
 	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
+    //oculusEffect = new THREE.OculusRiftEffect(renderer, {worldScale: 100});
+    //oculusEffect.setSize( window.innerWidth, window.innerHeight );
+
 	container.appendChild( renderer.domElement );
 
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -126,16 +164,62 @@ function init() {
 
 	} else {
 
-		model = new THREE.Mesh( 
+		/*model = new THREE.Mesh( 
 			new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
 			modelMaterial
 		);
 		model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
-		model.material.map.repeat.set( 4, 2 );
-		model.scale.set( 4, 4,4 );
+		model.material.map.repeat.set( 8, 2 );
+		model.scale.set( 4, 4,4 );*/
+
+		var s = new THREE.CubeGeometry( 10, 10, 10, 1, 1 ,1 );
+		//var s = new THREE.IcosahedronGeometry( 5, 3 );
+		var g = new THREE.Geometry();
+		var r = 2000;
+		for( var j = 0; j < 100 ; j++ ) {
+			var m = new THREE.Mesh( s, modelMaterial );
+			m.rotation.set( Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI );
+			m.position.set( ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r );
+			var scale = 10 + Math.random() * 20;
+			m.scale.set( scale, scale, scale );
+			THREE.GeometryUtils.merge( g, m );
+		}
+		model = new THREE.Mesh( g, modelMaterial );
+		model.castShadow = true;
+		model.receiveShadow = true;
+
 		scene.add( model );
 
 	}
+
+	var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
+
+	var light;
+	var ambient = new THREE.AmbientLight( 0x444444 );
+	scene.add( ambient );
+
+	light = new THREE.SpotLight( 0xaaaaaa, 1, 0, Math.PI / 2, 1 );
+	light.position.set( 0, 1500, 1000 );
+	light.target.position.set( 0, 0, 0 );
+
+	light.castShadow = true;
+
+	light.shadowCameraNear = 1200;
+	light.shadowCameraFar = 2500;
+	light.shadowCameraFov = 50;
+
+	//light.shadowCameraVisible = true;
+
+	light.shadowBias = 0.0001;
+	light.shadowDarkness = 0.5;
+
+	light.shadowMapWidth = SHADOW_MAP_WIDTH;
+	light.shadowMapHeight = SHADOW_MAP_HEIGHT;
+
+	scene.add( light );
+
+	renderer.shadowMapEnabled = true;
+	renderer.shadowMapType = THREE.PCFShadowMap;
 
 	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 
@@ -154,6 +238,7 @@ function init() {
 	dirtPass = new WAGNER.DirtPass();
 	blendPass = new WAGNER.BlendPass();
 	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
+	SSAOPass = new WAGNER.SSAOPass();
 
 	onWindowResize();
 
@@ -170,7 +255,9 @@ function onWindowResize() {
 	renderer.setSize( s * w, s * h );
 	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
 	composer.setSize( w, h );
-	tmpTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	depthTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	normalTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	colorTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
 
 }
 
@@ -228,13 +315,14 @@ function render() {
 	camera.position.y += ( - mouseY - camera.position.y ) * .05;
 	camera.lookAt( scene.position );
 
-	model.material = depthMaterial;
 
 	var k = Math.sin( .002 * t ) * .02 + .02;
 	renderer.autoClearColor = true;
 	composer.reset();
+
+	model.material = depthMaterial;
 	composer.render( scene, camera );
-	composer.toTexture( tmpTexture );
+	composer.toTexture( depthTexture );
 
 	model.material = modelMaterial;
 	composer.render( scene, camera );
@@ -249,14 +337,29 @@ function render() {
 //	composer.pass( vignettePass );
 //	composer.pass( vignette2Pass );
 //	composer.pass( CGAPass );
-//	composer.pass( edgeDetectionPass );
 	
-	if( guidedFullBoxBlurPass.isLoaded() ) {
-		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = tmpTexture;
+	/*if( guidedFullBoxBlurPass.isLoaded() ) {
+		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
 	}
 	composer.pass( guidedFullBoxBlurPass );
 	composer.pass( multiPassBloomPass );
+	composer.pass( dirtPass );*/
+
+	if( SSAOPass.isLoaded() ) {
+		SSAOPass.shader.uniforms.tDepth.value = depthTexture;
+		composer.pass( SSAOPass );
+	}
+
+	if( guidedFullBoxBlurPass.isLoaded() ) {
+		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.isPacked.value = true;
+		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
+	}
+	
+	composer.pass( multiPassBloomPass );
+	composer.pass( guidedFullBoxBlurPass );
 	composer.pass( dirtPass );
+
+//	composer.pass( CGAPass );
 
 	composer.toScreen();
 
