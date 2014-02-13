@@ -5,6 +5,8 @@ Effects composer for three.js
 
 This is a WIP version of a new proposal for an effect composer for three.js
 
+There's a demo with the latest-ish version of the code here [demo](http://www.clicktorelease.com/tmp/wagner).
+
 Please use it only for review and test purposes. Don't hesitate to add issues or open a conversation about design decisions.
 
 Basic usage
@@ -45,6 +47,7 @@ What works
     - Sepia, Noise, Denoise, Vignette, edge detection
     - Multi Pass Bloom: multipass, applies blur and blends with Screen mode
     - DOF (simple)
+    - SSAO (simple)
 - uniform reflection from GLSL source is working enough to be usable for most cases
 
 What still doesn't work / needs work
@@ -52,10 +55,11 @@ What still doesn't work / needs work
 
 - ~~ShaderLoader will probably be removed, or be transparent to the user~~
 - Passing parameters to WAGNER.ShaderPass from main code
-- Correct use of textures of different dimensions along the chain
-- Multiple Composers working at the same time
+- ~~Correct use of textures of different dimensions along the chain~~
+- Resizing correctly all render targets
+- ~~Multiple Composers working at the same time~~
 - Shaders that are not ported to WAGNER.Pass: pixelate, rgb split, different single-pass bloom
-- Shaders that haven't even been ported to WAGNER: SSAO, camera motion blur, directional blur, gamma, levels, 
+- Shaders that haven't even been ported to WAGNER: camera motion blur, directional blur, gamma, levels, 
 - Alias definition of passes (previously loadPass()) legacy
 - uniform reflection from GLSL source doesn't support structures (I don't even know if WebGL supports structures)
 
