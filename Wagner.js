@@ -240,15 +240,18 @@ WAGNER.Composer.prototype.setSize = function( w, h ) {
 
 WAGNER.Composer.prototype.defaultMaterial = new THREE.MeshBasicMaterial();
 
-
 WAGNER.loadShader = function( file, callback ) {
+
+	var path;
+	if( file.indexOf( '-vs.glsl' ) != -1 ) path = 'vertex-shaders/';
+	else path = 'fragment-shaders/';
 
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function() {
 		var content = oReq.responseText;
 		callback( content );
 	}.bind( this );
-	oReq.open( 'get', file, true );
+	oReq.open( 'get', path + file, true );
 	oReq.send();
 
 }
@@ -652,7 +655,7 @@ WAGNER.EdgeDetectionPass.prototype = new WAGNER.Pass();
 WAGNER.DirtPass = function() {
 
 	this.blendPass = new WAGNER.BlendPass();
-	this.dirtTexture = THREE.ImageUtils.loadTexture( 'dirt8.jpg' );
+	this.dirtTexture = THREE.ImageUtils.loadTexture( 'assets/textures/dirt8.jpg' );
 
 }
 

@@ -75,8 +75,8 @@ var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, 
 var depthTexture, normalTexture, colorTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
 var modelMaterial = new THREE.MeshPhongMaterial( { 
-	map: THREE.ImageUtils.loadTexture( '1324.jpg' ), 
-	normalMap: THREE.ImageUtils.loadTexture( '1324-normal.jpg' ),
+	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324.jpg' ), 
+	normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
 	normalScale: new THREE.Vector2( .8, -.8 ),
 	shininess: 10,
 	specular: 0xffffff,
@@ -85,8 +85,8 @@ var modelMaterial = new THREE.MeshPhongMaterial( {
 //modelMaterial = new THREE.MeshNormalMaterial();
 
 var sL = new ShaderLoader()
-sL.add( 'orto-vs', 'orto-vs.glsl' );
-sL.add( 'depth-fs', 'packed-depth-fs.glsl' );
+sL.add( 'orto-vs', 'vertex-shaders/orto-vs.glsl' );
+sL.add( 'depth-fs', 'fragment-shaders/packed-depth-fs.glsl' );
 sL.load();
 sL.onLoaded( function() {
 	depthMaterial = new THREE.ShaderMaterial( {
