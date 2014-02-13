@@ -3,14 +3,26 @@ uniform sampler2D tDiffuse;
 uniform sampler2D tBias;
 uniform vec2 delta;
 uniform float invertBiasMap;
+uniform float isPacked;
 
 float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
 
+float unpack_depth(const in vec4 color) {
+	return ( color.r * 256. * 256. * 256. + color.g * 256. * 256. + color.b * 256. + color.a ) / ( 256. * 256. * 256. );
+}
+
+float sampleBias( vec2 uv ) {
+	return unpack_depth( texture2D( tBias, uv ) );
+}
+
 void main() {
 
-	float f = texture2D( tBias, vUv ).r;
-	if( invertBiasMap == 1. ) f = 1. - f;
-	f = 2. *  abs( .5 - f );
+	float f = sampleBias( vUv );
+	//if( invertBiasMap == 1. ) f = 1. - f;
+	//f = 2. * abs( .5 - f );
+	f = abs( .5 - f );
+	f = smoothstep( .3, .7, f );
+	f *= 3.;
 	vec4 o = texture2D( tDiffuse,vUv );
 	vec4 color=vec4(0.0);
 	float total=0.0;
@@ -28,5 +40,5 @@ void main() {
 	if( total == 0. ) total = 1.;
 	gl_FragColor = mix( o, color/total, f );
 	gl_FragColor.rgb/=gl_FragColor.a+0.00001;
-	
+
 }
