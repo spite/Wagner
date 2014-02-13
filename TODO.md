@@ -1,0 +1,9 @@
+- ~~ShaderLoader will probably be removed, or be transparent to the user~~
+- Passing parameters to WAGNER.ShaderPass from main code
+- ~~Correct use of textures of different dimensions along the chain~~
+- ~~Multiple Composers working at the same time~~
+- Shaders that are not ported to WAGNER.Pass: pixelate, rgb split, different single-pass bloom
+- Shaders that haven't even been ported to WAGNER: SSAO, DOF, camera motion blur, directional blur, gamma, levels, edge detection
+- Alias definition of passes (previously loadPass()) legacy
+- uniform reflection from GLSL source doesn't support structures (I don't even know if WebGL supports structures)
+- something is wrong with alpha: some additive effects are different when using RGB/RGBA format
