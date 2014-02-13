@@ -4,38 +4,38 @@ uniform sampler2D tDiffuse2;
 uniform vec2 resolution;
 uniform int mode;
 
-float applyOverlayToChannel( float a, float b ) {
+float applyOverlayToChannel( float base, float blend ) {
 
-	float result;
-	if( a < .5) {
-		result = 2. * a * b + a * a - 2. * a * a * b;
-	} else {
-    	result = 2. * sqrt( a ) * b - sqrt( a ) + 2. * a - 2. * a * b;
-	}
-	return result;
+	return (base < 0.5 ? (2.0 * base * blend) : (1.0 - 2.0 * (1.0 - base) * (1.0 - blend)));
 
 }
 
-float applySoftLightToChannel( float a, float b ) {
+float applySoftLightToChannel( float base, float blend ) {
 
-	float result;
-	if( b < .5) {
-		result = 2. * a * b;
-	} else {
-		result = 1. - 2. * ( 1. - a) * ( 1. - b);
-	}
-	return result;
+	return ((blend < 0.5) ? (2.0 * base * blend + base * base * (1.0 - 2.0 * blend)) : (sqrt(base) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend)));
+
+}
+
+float applyColorBurnToChannel( float base, float blend ) {
+
+	return ((blend == 0.0) ? blend : max((1.0 - ((1.0 - base) / blend)), 0.0));
+
+}
+
+float applyColorDodgeToChannel( float base, float blend ) {
+
+	return ((blend == 1.0) ? blend : min(base / (1.0 - blend), 1.0));
 
 }
 
 void main() {
 
-	vec4 a = texture2D( tDiffuse, vUv );
-	vec4 b = texture2D( tDiffuse2, vUv );
+	vec4 base = texture2D( tDiffuse, vUv );
+	vec4 blend = texture2D( tDiffuse2, vUv );
 
 	if( mode == 1 ) { // normal
 
-		gl_FragColor = a;
+		gl_FragColor = base;
 		return;
 
 	}
@@ -46,23 +46,34 @@ void main() {
 
 	if( mode == 3 ) { // darken
 
-		gl_FragColor = min( a, b );
+		gl_FragColor = min( base, blend );
 		return;
 
 	}
 
 	if( mode == 4 ) { // multiply
 
-		gl_FragColor = a * b;
+		gl_FragColor = base * blend;
 		return;
 
 	}
 
 	if( mode == 5 ) { // color burn
 
+		gl_FragColor = vec4(
+			applyColorBurnToChannel( base.r, blend.r ),
+			applyColorBurnToChannel( base.g, blend.g ),
+			applyColorBurnToChannel( base.b, blend.b ),
+			applyColorBurnToChannel( base.a, blend.a )
+		);
+		return;
+
 	}
 
 	if( mode == 6 ) { // linear burn
+
+		gl_FragColor = max(base + blend - 1.0, 0.0);
+		return;
 
 	}
 
@@ -72,23 +83,34 @@ void main() {
 
 	if( mode == 8 ) { // lighten
 
-		gl_FragColor = max( a, b );
+		gl_FragColor = max( base, blend );
 		return;
 
 	}
 
 	if( mode == 9 ) { // screen
 
-		gl_FragColor = vec4( 1. ) - ( vec4( 1. ) - a ) * ( vec4( 1. ) - b );
-		
+		gl_FragColor = (1.0 - ((1.0 - base) * (1.0 - blend)));
 		return;
+
 	}
 
 	if( mode == 10 ) { // color dodge
 
+		gl_FragColor = vec4(
+			applyColorDodgeToChannel( base.r, blend.r ),
+			applyColorDodgeToChannel( base.g, blend.g ),
+			applyColorDodgeToChannel( base.b, blend.b ),
+			applyColorDodgeToChannel( base.a, blend.a )
+		);
+		return;
+
 	}
 
 	if( mode == 11 ) { // linear dodge
+
+		gl_FragColor = min(base + blend, 1.0);
+		return;
 
 	}
 
@@ -98,11 +120,11 @@ void main() {
 
 	if( mode == 13 ) { // overlay
 
-		gl_FragColor = vec4( 
-			applyOverlayToChannel( a.r, b.r ),
-			applyOverlayToChannel( a.g, b.g ),
-			applyOverlayToChannel( a.b, b.b ),
-			applyOverlayToChannel( a.a, b.a )
+		gl_FragColor = gl_FragColor = vec4( 
+			applyOverlayToChannel( base.r, blend.r ),
+			applyOverlayToChannel( base.g, blend.g ),
+			applyOverlayToChannel( base.g, blend.b ),
+			applyOverlayToChannel( base.a, blend.a )
 		);
 		return;
 
@@ -111,10 +133,10 @@ void main() {
 	if( mode == 14 ) { // soft light
 
 		gl_FragColor = vec4( 
-			applySoftLightToChannel( a.r, b.r ),
-			applySoftLightToChannel( a.g, b.g ),
-			applySoftLightToChannel( a.b, b.b ),
-			applySoftLightToChannel( a.a, b.a )
+			applySoftLightToChannel( base.r, blend.r ),
+			applySoftLightToChannel( base.g, blend.g ),
+			applySoftLightToChannel( base.b, blend.b ),
+			applySoftLightToChannel( base.a, blend.a )
 		);
 		return;
 
@@ -123,10 +145,10 @@ void main() {
 	if( mode == 15 ) { // hard light
 
 		gl_FragColor = vec4( 
-			applyOverlayToChannel( b.r, a.r ),
-			applyOverlayToChannel( b.g, a.g ),
-			applyOverlayToChannel( b.b, a.b ),
-			applyOverlayToChannel( b.a, a.a )
+			applyOverlayToChannel( base.r, blend.r ),
+			applyOverlayToChannel( base.g, blend.g ),
+			applyOverlayToChannel( base.b, blend.b ),
+			applyOverlayToChannel( base.a, blend.a )
 		);
 		return;
 
@@ -150,15 +172,15 @@ void main() {
 
 	if( mode == 21 ) { // difference
 
-		gl_FragColor = abs( a - b );
-		gl_FragColor.a = a.a + a.b;
+		gl_FragColor = abs( base - blend );
+		gl_FragColor.a = base.a + blend.b;
 		return;
 
 	}
 
 	if( mode == 22 ) { // exclusion
 
-		gl_FragColor = a + b - 2. * a * b;
+		gl_FragColor = base + blend - 2. * base * blend;
 		
 	}
 
@@ -169,7 +191,6 @@ void main() {
 	if( mode == 24 ) { // divide
 
 	}
-
 
 	gl_FragColor = vec4( 1., 0., 1., 1. );
 
