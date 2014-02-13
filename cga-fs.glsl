@@ -25,16 +25,16 @@ void main() {
 	vec3 c2;
 	
 	vec3 black = vec3( 0. );
-	vec3 dark = vec3( 85., 255., 255. ) / 255.;
-	vec3 light = vec3( 254., 84., 255. ) / 255.;
+	vec3 light = vec3( 85., 255., 255. ) / 255.;
+	vec3 dark = vec3( 254., 84., 255. ) / 255.;
 	vec3 white = vec3( 1. );
 
 	/*dark = vec3( 89., 255., 17. ) / 255.;
 	light = vec3( 255., 87., 80. ) / 255.;
 	white = vec3( 255., 255., 0. ) / 255.;*/
 
-	light = vec3( 85., 255., 255. ) / 255.;
-	dark = vec3( 255., 86., 80. ) / 255.;
+	/*light = vec3( 85., 255., 255. ) / 255.;
+	dark = vec3( 255., 86., 80. ) / 255.;*/
 
 	if( o == 0. ) { c1 = black; c2 = c1; }
 	if( o == 1. ) { c1 = black; c2 = dark; }
