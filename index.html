@@ -70,7 +70,8 @@ var model, quad, oculusEffect;
 
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
 	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, edgeDetectionPass,
-	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass;
+	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
+	artPass;
 
 var depthTexture, normalTexture, colorTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
@@ -239,6 +240,9 @@ function init() {
 	blendPass = new WAGNER.BlendPass();
 	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
 	SSAOPass = new WAGNER.SSAOPass();
+	pixelatePass = new WAGNER.PixelatePass();
+	rgbSplitPass = new WAGNER.RGBSplitPass();
+	artPass = new WAGNER.ArtPass();
 
 	onWindowResize();
 
@@ -354,11 +358,16 @@ function render() {
 		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.isPacked.value = true;
 		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
 	}
-	
-	composer.pass( multiPassBloomPass );
-	composer.pass( guidedFullBoxBlurPass );
-	composer.pass( dirtPass );
 
+	composer.pass( artPass );
+
+//	composer.pass( multiPassBloomPass );
+//	composer.pass( edgeDetectionPass );
+	composer.pass( guidedFullBoxBlurPass );
+	composer.pass( rgbSplitPass )
+	composer.pass( multiPassBloomPass );
+	composer.pass( dirtPass );
+	composer.pass( pixelatePass )
 //	composer.pass( CGAPass );
 
 	composer.toScreen();
