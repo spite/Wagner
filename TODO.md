@@ -10,3 +10,8 @@
 - add packed normal material
 - add uv material / uv packed material (does it make sense?)
 - add combined normal + height, uv + height materials (?)
+
+References
+----------
+
+https://www.shadertoy.com/user/hornet
