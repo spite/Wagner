@@ -27,6 +27,8 @@ WAGNER.Composer = function( renderer, settings ) {
 	
 	this.back = this.front.clone();
 
+	this.startTime = Date.now();
+
 	this.passes = {};
 
 }
@@ -113,6 +115,7 @@ WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 		this.quad.material.uniforms[ j ].value = uniforms[ j ];
 	}
 	this.quad.material.uniforms.resolution.value.set( this.width, this.height );
+	this.quad.material.uniforms.time.value = .001 * ( Date.now() - this.startTime );
 	this.renderer.render( this.scene, this.camera, this.write, false );
 	this.swapBuffers();
 
@@ -290,7 +293,9 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	var matches;
 	var uniforms = {
-		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
+		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) },
+		time: { type: 'f', value: Date.now() },
+		tDiffuse: { type: 't', value: new THREE.Texture() }
 	};
 
 	while( ( matches = regExp.exec( fragmentShaderCode ) ) != null) {
@@ -343,7 +348,7 @@ WAGNER.Pass = function() {
 
 WAGNER.Pass.prototype.run = function( c ) {
 
-	console.log( 'Pass run' );
+	//console.log( 'Pass run' );
 	c.pass( this.shader );
 
 }
@@ -784,3 +789,58 @@ WAGNER.ArtPass = function() {
 }
 
 WAGNER.ArtPass.prototype = new WAGNER.Pass();
+
+/*
+
+https://www.shadertoy.com/view/XssGz8
+
+Simulates Chromatic Aberration by linearly interpolating blur-weights from red to green to blue.
+Original idea by Kusma: https://github.com/kusma/vlee/blob/master/data/postprocess.fx
+Barrel Blur forked from https://www.shadertoy.com/view/XslGz8
+
+*/
+
+WAGNER.ChromaticAberrationPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'ChromaticAberrationPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'chromatic-aberration-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+		} );
+	} );
+
+}
+
+WAGNER.ChromaticAberrationPass.prototype = new WAGNER.Pass();
+
+WAGNER.BarrelBlurPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'BarrelBlurPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'barrel-blur-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+		} );
+	} );
+
+}
+
+WAGNER.BarrelBlurPass.prototype = new WAGNER.Pass();
+
+WAGNER.OldVideoPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'OldVideoPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'old-video-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+		} );
+	} );
+
+}
+
+WAGNER.OldVideoPass.prototype = new WAGNER.Pass();
