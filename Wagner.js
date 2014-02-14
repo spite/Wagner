@@ -738,3 +738,49 @@ WAGNER.SSAOPass = function() {
 
 WAGNER.SSAOPass.prototype = new WAGNER.Pass();
 
+WAGNER.PixelatePass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'PixelatePass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'pixelate-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+			self.shader.uniforms.amount.value = 320;
+		} );
+	} );
+
+}
+
+WAGNER.PixelatePass.prototype = new WAGNER.Pass();
+
+WAGNER.RGBSplitPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'RGBSplitPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'rgb-split-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+			self.shader.uniforms.distance.value.set( 10, 10 );
+		} );
+	} );
+
+}
+
+WAGNER.RGBSplitPass.prototype = new WAGNER.Pass();
+
+WAGNER.ArtPass = function() {
+
+	WAGNER.Pass.call( this );
+	console.log( 'ArtPass Pass constructor' );
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( 'art-fs.glsl', function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+		} );
+	} );
+
+}
+
+WAGNER.ArtPass.prototype = new WAGNER.Pass();
