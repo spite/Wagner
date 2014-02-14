@@ -5,7 +5,9 @@ Effects composer for three.js
 
 This is a WIP version of a new proposal for an effect composer for three.js
 
-There's a demo with the latest-ish version of the code here [demo](http://www.clicktorelease.com/tmp/wagner).
+There's a demo with the latest-ish version of the code here [demo](http://www.clicktorelease.com/tmp/wagner). Here's a snapshot to give you an idea of what it can achieve:
+
+![Image](./assets/snapshot.jpg)
 
 Please use it only for review and test purposes. Don't hesitate to add issues or open a conversation about design decisions.
 
