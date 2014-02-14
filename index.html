@@ -71,7 +71,7 @@ var model, quad, oculusEffect;
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
 	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, edgeDetectionPass,
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
-	artPass;
+	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass;
 
 var depthTexture, normalTexture, colorTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
@@ -243,6 +243,9 @@ function init() {
 	pixelatePass = new WAGNER.PixelatePass();
 	rgbSplitPass = new WAGNER.RGBSplitPass();
 	artPass = new WAGNER.ArtPass();
+	chromaticAberrationPass = new WAGNER.ChromaticAberrationPass();
+	barrelBlurPass = new WAGNER.BarrelBlurPass();
+	oldVideoPass = new WAGNER.OldVideoPass();
 
 	onWindowResize();
 
@@ -359,15 +362,19 @@ function render() {
 		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
 	}
 
-	composer.pass( artPass );
+	//composer.pass( artPass );
 
+	composer.pass( oldVideoPass );
+
+//	composer.pass( barrelBlurPass );
+//	composer.pass( chromaticAberrationPass );
 //	composer.pass( multiPassBloomPass );
 //	composer.pass( edgeDetectionPass );
-	composer.pass( guidedFullBoxBlurPass );
-	composer.pass( rgbSplitPass )
-	composer.pass( multiPassBloomPass );
-	composer.pass( dirtPass );
-	composer.pass( pixelatePass )
+//	composer.pass( guidedFullBoxBlurPass );
+//	composer.pass( rgbSplitPass )
+//	composer.pass( multiPassBloomPass );
+//	composer.pass( dirtPass );
+//	composer.pass( pixelatePass )
 //	composer.pass( CGAPass );
 
 	composer.toScreen();
