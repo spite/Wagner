@@ -1,5 +1,9 @@
 var WAGNER = WAGNER || {};
 
+WAGNER.log = function( msg ) {
+	console.log( msg );
+}
+
 WAGNER.Composer = function( renderer, settings ) {
 
 	this.width = 1;
@@ -7,6 +11,8 @@ WAGNER.Composer = function( renderer, settings ) {
 
 	this.settings = settings || {};
 	this.useRGBA = this.settings.useRGBA || false;
+	this.vertexShadersPath = this.settings.vertexShadersPath || 'vertex-shaders';
+	this.fragmentShadersPath = this.settings.fragmentShadersPath || 'vertex-shaders';	
 
 	this.renderer = renderer;
 	this.copyPass = new WAGNER.CopyPass();
@@ -67,9 +73,6 @@ WAGNER.Composer.prototype.render = function( scene, camera ) {
 
 	if( this.copyPass.isLoaded() ) {
 		this.renderer.render( scene, camera, this.write, true );
-		/*this.quad.material = this.copyPass.shader;
-		this.quad.material.uniforms.tDiffuse.value = this.write;
-		this.quad.material.uniforms.resolution.value.set( this.width, this.height );*/
 		this.swapBuffers();
 	}
 
@@ -146,7 +149,7 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 
 	var shaderCode = this.shaderLoader.get( fragmentShaderId );
 	var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi; 
-	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\d)\s*\]*\s*;/gi;
+	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
 
 	var typesMap = {
 		
@@ -186,7 +189,7 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 		}
 		var uniformType = matches[ 1 ],
 			uniformName = matches[ 2 ];
-		console.log( '  > ', uniformType, uniformName );
+		WAGNER.log( '  > ', uniformType, uniformName );
 		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
@@ -199,7 +202,7 @@ WAGNER.Composer.prototype.createPass = function( fragmentShaderId, extraUniforms
 		}
 		var uniformType = matches[ 1 ],
 			uniformName = matches[ 2 ];
-		console.log( '  > ', uniformType, uniformName );
+		WAGNER.log( '  > ', uniformType, uniformName );
 		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
@@ -262,7 +265,7 @@ WAGNER.loadShader = function( file, callback ) {
 WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi; 
-	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\d)\s*\]*\s*;/gi;
+	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
 
 	var typesMap = {
 		
@@ -291,6 +294,10 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	}
 
+	var arrayTypesMap = {
+		vec3: { type: 'v3v', value: function() { return []; } }
+	}
+
 	var matches;
 	var uniforms = {
 		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) },
@@ -304,7 +311,7 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		}
 		var uniformType = matches[ 1 ],
 			uniformName = matches[ 2 ];
-		console.log( '  > ', uniformType, uniformName );
+		WAGNER.log( '  > SINGLE', uniformType, uniformName );
 		uniforms[ uniformName ] = {
 			type: typesMap[ uniformType ].type,
 			value: typesMap[ uniformType ].value()
@@ -316,11 +323,12 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 			regExp.lastIndex++;
 		}
 		var uniformType = matches[ 1 ],
-			uniformName = matches[ 2 ];
-		console.log( '  > ', uniformType, uniformName );
+			uniformName = matches[ 2 ],
+			arraySize = matches[ 3 ];
+		WAGNER.log( '  > ARRAY', arraySize, uniformType, uniformName );
 		uniforms[ uniformName ] = {
-			type: typesMap[ uniformType ].type,
-			value: typesMap[ uniformType ].value()
+			type: arrayTypesMap[ uniformType ].type,
+			value: arrayTypesMap[ uniformType ].value()
 		};
 	}
 
@@ -340,15 +348,27 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 WAGNER.Pass = function() {
 
-	console.log( 'Pass constructor' );
+	WAGNER.log( 'Pass constructor' );
 	this.shader = null;
 	this.loaded = null;
 
 }
 
+WAGNER.Pass.prototype.loadShader = function( id, c ) {
+
+	var self = this;
+	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( id, function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+			if( c ) c.apply( self );
+		} );
+	} );
+
+}
+
 WAGNER.Pass.prototype.run = function( c ) {
 
-	//console.log( 'Pass run' );
+	//WAGNER.log( 'Pass run' );
 	c.pass( this.shader );
 
 }
@@ -365,12 +385,12 @@ WAGNER.Pass.prototype.isLoaded = function() {
 
 }
 
-WAGNER.Pass.prototype.getOfflineTexture = function( w, h ){
+WAGNER.Pass.prototype.getOfflineTexture = function( w, h, useRGBA ){
 
 	var rtTexture = new THREE.WebGLRenderTarget( w, h, { 
 		minFilter: THREE.LinearFilter, 
 		magFilter: THREE.LinearFilter, 
-		format: this.useRGBA?THREE.RGBAFormat:THREE.RGBFormat
+		format: useRGBA?THREE.RGBAFormat:THREE.RGBFormat
 	} );
 
 	return rtTexture;
@@ -380,13 +400,8 @@ WAGNER.Pass.prototype.getOfflineTexture = function( w, h ){
 WAGNER.CopyPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'CopyPass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'copy-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'CopyPass constructor' );
+	this.loadShader( 'copy-fs.glsl' );
 
 }
 
@@ -395,15 +410,11 @@ WAGNER.CopyPass.prototype = new WAGNER.Pass();
 WAGNER.BlendPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'BlendPass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'blend-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.mode.value = 1;
-		} );
+	WAGNER.log( 'BlendPass constructor' );
+	this.loadShader( 'blend-fs.glsl', function() {
+		this.shader.uniforms.mode.value = 1;
 	} );
-
+	
 }
 
 WAGNER.BlendPass.prototype = new WAGNER.Pass();
@@ -411,13 +422,8 @@ WAGNER.BlendPass.prototype = new WAGNER.Pass();
 WAGNER.InvertPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'InvertPass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'invert-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'InvertPass constructor' );
+	this.loadShader( 'invert-fs.glsl' );
 
 }
 
@@ -426,14 +432,8 @@ WAGNER.InvertPass.prototype = new WAGNER.Pass();
 WAGNER.SepiaPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'SepiaPass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'sepia-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.amount.value = 1.;
-		} );
-	} );
+	WAGNER.log( 'SepiaPass constructor' );
+	this.loadShader( 'sepia-fs.glsl' );
 
 }
 
@@ -442,13 +442,9 @@ WAGNER.SepiaPass.prototype = new WAGNER.Pass();
 WAGNER.NoisePass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'Denoise Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'noise-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.amount.value = .01;
-		} );
+	WAGNER.log( 'Denoise Pass constructor' );
+	this.loadShader( 'noise-fs.glsl', function() {
+		this.shader.uniforms.amount.value = .01;
 	} );
 
 }
@@ -458,14 +454,10 @@ WAGNER.NoisePass.prototype = new WAGNER.Pass();
 WAGNER.VignettePass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'Vignette Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'vignette-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.amount.value = 1;
-			self.shader.uniforms.size.value = .1;
-		} );
+	WAGNER.log( 'Vignette Pass constructor' );
+	this.loadShader( 'vignette-fs.glsl', function() {
+		this.shader.uniforms.amount.value = 1;
+		this.shader.uniforms.size.value = .1;
 	} );
 
 }
@@ -475,13 +467,8 @@ WAGNER.VignettePass.prototype = new WAGNER.Pass();
 WAGNER.Vignette2Pass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'Vignette Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'vignette2-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'Vignette Pass constructor' );
+	this.loadShader( 'vignette2-fs.glsl' );
 
 }
 
@@ -490,14 +477,10 @@ WAGNER.Vignette2Pass.prototype = new WAGNER.Pass();
 WAGNER.DenoisePass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'Denoise Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'denoise-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.exponent.value = 5;
-			self.shader.uniforms.strength.value = 10;
-		} );
+	WAGNER.log( 'Denoise Pass constructor' );
+	this.loadShader( 'denoise-fs.glsl', function() {
+		this.shader.uniforms.exponent.value = 5;
+		this.shader.uniforms.strength.value = 10;
 	} );
 
 }
@@ -507,13 +490,8 @@ WAGNER.DenoisePass.prototype = new WAGNER.Pass();
 WAGNER.BoxBlurPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'BoxBlurPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'box-blur-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'BoxBlurPass Pass constructor' );
+	this.loadShader( 'box-blur-fs.glsl' );
 
 }
 
@@ -522,7 +500,7 @@ WAGNER.BoxBlurPass.prototype = new WAGNER.Pass();
 WAGNER.FullBoxBlurPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'FullBoxBlurPass Pass constructor' );
+	WAGNER.log( 'FullBoxBlurPass Pass constructor' );
 	this.boxPass = new WAGNER.BoxBlurPass();
 
 }
@@ -553,14 +531,10 @@ WAGNER.ZoomBlurPass = function() {
 	this.strength = 2;
 
 	WAGNER.Pass.call( this );
-	console.log( 'ZoomBlurPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'zoom-blur-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.center.value.set( .5, .5 );
-			self.shader.uniforms.strength.value = this.strength;
-		} );
+	WAGNER.log( 'ZoomBlurPass Pass constructor' );
+	this.loadShader( 'zoom-blur-fs.glsl', function() {
+		this.shader.uniforms.center.value.set( .5, .5 );
+		this.shader.uniforms.strength.value = this.strength;
 	} );
 
 }
@@ -577,7 +551,7 @@ WAGNER.ZoomBlurPass.prototype.run = function( c ) {
 WAGNER.MultiPassBloomPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'MultiPassBloomPass Pass constructor' );
+	WAGNER.log( 'MultiPassBloomPass Pass constructor' );
 
 	this.composer = null;
 
@@ -629,33 +603,34 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 WAGNER.CGAPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'CGA Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'cga-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.pixelDensity.value = window.devicePixelRatio;
-		} );
+	WAGNER.log( 'CGA Pass constructor' );
+	this.loadShader( 'cga-fs.glsl', function() {
+		this.shader.uniforms.pixelDensity.value = window.devicePixelRatio;
 	} );
 
 }
 
 WAGNER.CGAPass.prototype = new WAGNER.Pass();
 
-WAGNER.EdgeDetectionPass = function() {
+WAGNER.SobelEdgeDetectionPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'CGA Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'sobel-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'SobelEdgeDetectionPass Pass constructor' );
+	this.loadShader( 'sobel-fs.glsl' );
 
 }
 
-WAGNER.EdgeDetectionPass.prototype = new WAGNER.Pass();
+WAGNER.SobelEdgeDetectionPass.prototype = new WAGNER.Pass();
+
+WAGNER.FreiChenEdgeDetectionPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'FreiChenEdgeDetectionPass Pass constructor' );
+	this.loadShader( 'frei-chen-fs.glsl' );
+
+}
+
+WAGNER.FreiChenEdgeDetectionPass.prototype = new WAGNER.Pass();
 
 WAGNER.DirtPass = function() {
 
@@ -686,13 +661,8 @@ WAGNER.DirtPass.prototype.run = function( c ) {
 WAGNER.GuidedBoxBlurPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'GuidedBoxBlurPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'guided-box-blur-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'GuidedBoxBlurPass Pass constructor' );
+	this.loadShader( 'guided-box-blur-fs.glsl' );
 
 }
 
@@ -701,7 +671,7 @@ WAGNER.GuidedBoxBlurPass.prototype = new WAGNER.Pass();
 WAGNER.GuidedFullBoxBlurPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'FullBoxBlurPass Pass constructor' );
+	WAGNER.log( 'FullBoxBlurPass Pass constructor' );
 	this.guidedBoxPass = new WAGNER.GuidedBoxBlurPass();
 
 }
@@ -728,31 +698,12 @@ WAGNER.GuidedFullBoxBlurPass.prototype.run = function( c ) {
 
 }
 
-WAGNER.SSAOPass = function() {
-
-	WAGNER.Pass.call( this );
-	console.log( 'SSAOPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'ssao-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
-
-}
-
-WAGNER.SSAOPass.prototype = new WAGNER.Pass();
-
 WAGNER.PixelatePass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'PixelatePass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'pixelate-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.amount.value = 320;
-		} );
+	WAGNER.log( 'PixelatePass Pass constructor' );
+	this.loadShader( 'pixelate-fs.glsl', function() {
+		this.shader.uniforms.amount.value = 320;
 	} );
 
 }
@@ -762,13 +713,9 @@ WAGNER.PixelatePass.prototype = new WAGNER.Pass();
 WAGNER.RGBSplitPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'RGBSplitPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'rgb-split-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			self.shader.uniforms.distance.value.set( 10, 10 );
-		} );
+	WAGNER.log( 'RGBSplitPass Pass constructor' );
+	this.loadShader( 'rgb-split-fs.glsl', function() {
+		this.shader.uniforms.distance.value.set( 10, 10 );
 	} );
 
 }
@@ -778,13 +725,8 @@ WAGNER.RGBSplitPass.prototype = new WAGNER.Pass();
 WAGNER.ArtPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'ArtPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'art-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'ArtPass Pass constructor' );
+	this.loadShader( 'art-fs.glsl' );
 
 }
 
@@ -803,13 +745,8 @@ Barrel Blur forked from https://www.shadertoy.com/view/XslGz8
 WAGNER.ChromaticAberrationPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'ChromaticAberrationPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'chromatic-aberration-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'ChromaticAberrationPass Pass constructor' );
+	this.loadShader( 'chromatic-aberration-fs.glsl' );
 
 }
 
@@ -818,13 +755,8 @@ WAGNER.ChromaticAberrationPass.prototype = new WAGNER.Pass();
 WAGNER.BarrelBlurPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'BarrelBlurPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'barrel-blur-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'BarrelBlurPass Pass constructor' );
+	this.loadShader( 'barrel-blur-fs.glsl' );
 
 }
 
@@ -833,14 +765,39 @@ WAGNER.BarrelBlurPass.prototype = new WAGNER.Pass();
 WAGNER.OldVideoPass = function() {
 
 	WAGNER.Pass.call( this );
-	console.log( 'OldVideoPass Pass constructor' );
-	var self = this;
-	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( 'old-video-fs.glsl', function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-		} );
-	} );
+	WAGNER.log( 'OldVideoPass Pass constructor' );
+	this.loadShader( 'old-video-fs.glsl' );
 
 }
 
 WAGNER.OldVideoPass.prototype = new WAGNER.Pass();
+
+WAGNER.DotScreenPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'DotScreenPass Pass constructor' );
+	this.loadShader( 'dot-screen-fs.glsl' );
+
+}
+
+WAGNER.DotScreenPass.prototype = new WAGNER.Pass();
+
+WAGNER.PoissonDiscBlurPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'PoissonDiscBlurPass Pass constructor' );
+	this.loadShader( 'poisson-disc-blur-fs.glsl' );
+
+}
+
+WAGNER.PoissonDiscBlurPass.prototype = new WAGNER.Pass();
+
+WAGNER.CircularBlurPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'CircularBlurPass Pass constructor' );
+	this.loadShader( 'circular-blur-fs.glsl' );
+
+}
+
+WAGNER.CircularBlurPass.prototype = new WAGNER.Pass();
