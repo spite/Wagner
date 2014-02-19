@@ -69,9 +69,10 @@ WAGNER.Composer.prototype.swapBuffers = function() {
 
 }
 
-WAGNER.Composer.prototype.render = function( scene, camera ) {
+WAGNER.Composer.prototype.render = function( scene, camera, keep ) {
 
 	if( this.copyPass.isLoaded() ) {
+		if( keep ) this.swapBuffers();
 		this.renderer.render( scene, camera, this.write, true );
 		this.swapBuffers();
 	}
