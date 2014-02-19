@@ -50,5 +50,5 @@ void main(void)
 		sum += texture2D( tDiffuse, vec2(uv.x, uv.y)-ofs[i], MIPBIAS );
 
 	gl_FragColor.rgb = sum.rgb / NUM_SAMPLES_F;
-	gl_FragColor.a = 1.0;
+	gl_FragColor.a = texture2D( tDiffuse, vUv ).a;
 }

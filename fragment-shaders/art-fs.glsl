@@ -9,7 +9,7 @@ float gamma( in float value, in float g ) {
 }
 void main(void) {
 	
-	vec3 color = texture2D( tDiffuse, vUv ).rgb;
+	vec4 color = texture2D( tDiffuse, vUv );
 	float r = color.r;
 	float g = color.g;
 	float b = color.b;
@@ -27,6 +27,6 @@ void main(void) {
 	b = gamma( b, 0.87 ); 
 	float yL = .2126 * color.r + .7152 * color.g + .0722 * color.b;
 	r += yL; g += yL; b += yL;
-	gl_FragColor = vec4( r, g, b, 1.0 );
+	gl_FragColor = vec4( r, g, b, color.a );
 	
 }

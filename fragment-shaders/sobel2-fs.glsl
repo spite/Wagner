@@ -7,9 +7,9 @@
  * aspect: vec2 of (1/width, 1/height)
  */
 
- uniform sampler2D tDiffuse;
- varying vec2 vUv;
- uniform vec2 resolution;
+uniform sampler2D tDiffuse;
+varying vec2 vUv;
+uniform vec2 resolution;
 
 vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
 mat3 G[2];

@@ -20,14 +20,14 @@ float remap( float t, float a, float b ) {
 	return sat( (t - a) / (b - a) );
 }
 
-vec3 spectrum_offset( float t ) {
-	vec3 ret;
+vec4 spectrum_offset( float t ) {
+	vec4 ret;
 	float lo = step(t,0.5);
 	float hi = 1.0-lo;
 	float w = linterp( remap( t, 1.0/6.0, 5.0/6.0 ) );
-	ret = vec3(lo,1.0,hi) * vec3(1.0-w, w, 1.0-w);
+	ret = vec4(lo,1.0,hi, 1.) * vec4(1.0-w, w, 1.0-w, 1.);
 
-	return pow( ret, vec3(1.0/2.2) );
+	return pow( ret, vec4(1.0/2.2) );
 }
 
 const float max_distort = 2.2;
@@ -38,15 +38,15 @@ void main()
 {	
 	vec2 uv=(gl_FragCoord.xy/resolution.xy*.5)+.25;
 
-	vec3 sumcol = vec3(0.0);
-	vec3 sumw = vec3(0.0);	
+	vec4 sumcol = vec4(0.0);
+	vec4 sumw = vec4(0.0);	
 	for ( int i=0; i<num_iter;++i )
 	{
 		float t = float(i) * reci_num_iter_f;
-		vec3 w = spectrum_offset( t );
+		vec4 w = spectrum_offset( t );
 		sumw += w;
-		sumcol += w * texture2D( tDiffuse, barrelDistortion(uv, max_distort*t ) ).rgb;
+		sumcol += w * texture2D( tDiffuse, barrelDistortion(uv, max_distort*t ) );
 	}
 		
-	gl_FragColor = vec4(sumcol.rgb / sumw, 1.0);
+	gl_FragColor = sumcol / sumw;
 }

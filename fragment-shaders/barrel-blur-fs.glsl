@@ -1,5 +1,6 @@
 uniform sampler2D tDiffuse;
 uniform vec2 resolution;
+varying vec2 vUv;
 
 vec2 barrelDistortion(vec2 coord, float amt) {
 	
@@ -32,6 +33,6 @@ void main() {
 	vec4 a12=texture2D(tDiffuse, barrelDistortion(uv,2.2));
 
 	vec4 tx=(a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12)/12.;
-	gl_FragColor = vec4(tx.rgb,1.);
-	
+	gl_FragColor = vec4(tx.rgb, tx.a );
+
 }
