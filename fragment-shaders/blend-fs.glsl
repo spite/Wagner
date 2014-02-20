@@ -166,11 +166,11 @@ void main() {
 
 	}
 
-	if( mode == 20 ) { // hard mix
+	if( mode == 19 ) { // hard mix
 
 	}
 
-	if( mode == 21 ) { // difference
+	if( mode == 20 ) { // difference
 
 		gl_FragColor = abs( base - blend );
 		gl_FragColor.a = base.a + blend.b;
@@ -178,17 +178,17 @@ void main() {
 
 	}
 
-	if( mode == 22 ) { // exclusion
+	if( mode == 21 ) { // exclusion
 
 		gl_FragColor = base + blend - 2. * base * blend;
 		
 	}
 
-	if( mode == 23 ) { // substract
+	if( mode == 22 ) { // substract
 
 	}
 
-	if( mode == 24 ) { // divide
+	if( mode == 23 ) { // divide
 
 	}
 

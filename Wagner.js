@@ -223,9 +223,9 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	var matches;
 	var uniforms = {
-		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ) },
-		time: { type: 'f', value: Date.now() },
-		tDiffuse: { type: 't', value: new THREE.Texture() }
+		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
+		time: { type: 'f', value: Date.now(), default: true },
+		tDiffuse: { type: 't', value: new THREE.Texture(), default: true }
 	};
 
 	while( ( matches = regExp.exec( fragmentShaderCode ) ) != null) {
@@ -274,6 +274,7 @@ WAGNER.Pass = function() {
 	WAGNER.log( 'Pass constructor' );
 	this.shader = null;
 	this.loaded = null;
+	this.params = {};
 
 }
 
@@ -283,9 +284,24 @@ WAGNER.Pass.prototype.loadShader = function( id, c ) {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( id, function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
+			self.mapUniforms( self.shader.uniforms );
 			if( c ) c.apply( self );
 		} );
 	} );
+
+}
+
+WAGNER.Pass.prototype.mapUniforms = function( uniforms ) {
+
+	for( var j in uniforms ) {
+		if( !uniforms[ j ].default ) {
+			Object.defineProperty( this.params, j, { 
+				get : function(){ return uniforms[ j ].value; }, 
+				set : function( v ){ uniforms[ j ].value = v; },
+				configurable : false 
+			} );
+		}
+	}
 
 }
 
@@ -339,6 +355,32 @@ WAGNER.BlendPass = function() {
 	} );
 	
 }
+
+WAGNER.BlendMode = {
+	Normal: 1,
+	Dissolve: 2,
+	Darken: 3,
+	Multiply: 4,
+	ColorBurn: 5,
+	LinearBurn: 6,
+	DarkerColor: 7,
+	Lighten: 8,
+	Screen: 9,
+	ColorDodge: 10,
+	LinearDodge: 11,
+	LighterColor: 12,
+	Overlay: 13,
+	SoftLight: 14,
+	HardLight: 15,
+	VividLight: 16,
+	LinearLight: 17,
+	PinLight: 18,
+	HardMix: 19,
+	Difference: 20,
+	Exclusion: 21,
+	Substract: 22,
+	Divide: 23
+};
 
 WAGNER.BlendPass.prototype = new WAGNER.Pass();
 
@@ -484,6 +526,9 @@ WAGNER.MultiPassBloomPass = function() {
 	this.blendPass = new WAGNER.BlendPass();
 	this.zoomBlur = new WAGNER.ZoomBlurPass();
 
+	this.params[ 'blurAmount' ] = 20;
+	this.params[ 'applyZoomBlur' ] = false;
+
 }
 
 WAGNER.MultiPassBloomPass.prototype = new WAGNER.Pass();
@@ -506,18 +551,18 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
 	}
 
-	var v = 20;
-
 	this.composer.reset();
 	this.composer.setSource( c.output );
-	this.boxPass.shader.uniforms.delta.value.set( v / this.composer.width, 0 );
+	this.boxPass.shader.uniforms.delta.value.set( this.params[ 'blurAmount' ] / this.composer.width, 0 );
 	this.composer.pass( this.boxPass.shader );
-	this.boxPass.shader.uniforms.delta.value.set( 0, v / this.composer.height );
+	this.boxPass.shader.uniforms.delta.value.set( 0, this.params[ 'blurAmount' ] / this.composer.height );
 	this.composer.pass( this.boxPass.shader );
 
-	this.composer.pass( this.zoomBlur );
+	if( this.params[ 'applyZoomBlur' ] ) {
+		this.composer.pass( this.zoomBlur );
+	}
 
-	this.blendPass.shader.uniforms.mode.value = 9;
+	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.Screen;
 	this.blendPass.shader.uniforms.tDiffuse2.value = this.composer.output;
 	c.pass( this.blendPass.shader );
 
@@ -575,7 +620,7 @@ WAGNER.DirtPass.prototype.isLoaded = function() {
 
 WAGNER.DirtPass.prototype.run = function( c ) {
 
-	this.blendPass.shader.uniforms.mode.value = 14;
+	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.SoftLight;
 	this.blendPass.shader.uniforms.tDiffuse2.value = this.dirtTexture;
 	c.pass( this.blendPass.shader );
 
