@@ -1,3 +1,7 @@
+(function() {
+
+'use strict'
+
 var WAGNER = WAGNER || {};
 
 WAGNER.log = function( msg ) {
@@ -102,7 +106,7 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 
 WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 
-	if( typeof pass === "string" ) {
+	if( typeof pass === 'string' ) {
 		this.quad.material = this.passes[ pass ];
 	}
 	if( pass instanceof THREE.ShaderMaterial ) {
@@ -200,20 +204,20 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		float: { type: 'f', value: function() { return 0; } },
 		
 		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		vec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		vec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		vec3: { type: 'v3', value: function() { return new THREE.Vector3() } },
+		vec4: { type: 'v4', value: function() { return new THREE.Vector4() } },
 
 		bvec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		bvec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		bvec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		bvec3: { type: 'v3', value: function() { return new THREE.Vector3() } },
+		bvec4: { type: 'v4', value: function() { return new THREE.Vector4() } },
 
 		ivec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
-		ivec3: { type: 'v2', value: function() { return new THREE.Vector3() } },
-		ivec4: { type: 'v2', value: function() { return new THREE.Vector4() } },
+		ivec3: { type: 'v3', value: function() { return new THREE.Vector3() } },
+		ivec4: { type: 'v4', value: function() { return new THREE.Vector4() } },
 
 		mat2: { type: 'v2', value: function() { return new THREE.Matrix2() } },
-		mat3: { type: 'v2', value: function() { return new THREE.Matrix3() } },
-		mat4: { type: 'v2', value: function() { return new THREE.Matrix4() } }
+		mat3: { type: 'v3', value: function() { return new THREE.Matrix3() } },
+		mat4: { type: 'v4', value: function() { return new THREE.Matrix4() } }
 
 	}
 
@@ -284,7 +288,7 @@ WAGNER.Pass.prototype.loadShader = function( id, c ) {
 	WAGNER.loadShader( 'orto-vs.glsl', function( vs ) {
 		WAGNER.loadShader( id, function( fs ) {
 			self.shader = WAGNER.processShader( vs, fs );
-			self.mapUniforms( self.shader.uniforms );
+			//self.mapUniforms( self.shader.uniforms );
 			if( c ) c.apply( self );
 		} );
 	} );
@@ -293,13 +297,17 @@ WAGNER.Pass.prototype.loadShader = function( id, c ) {
 
 WAGNER.Pass.prototype.mapUniforms = function( uniforms ) {
 
+	var params = this.params;
+
 	for( var j in uniforms ) {
 		if( !uniforms[ j ].default ) {
-			Object.defineProperty( this.params, j, { 
-				get : function(){ return uniforms[ j ].value; }, 
-				set : function( v ){ uniforms[ j ].value = v; },
-				configurable : false 
-			} );
+			(function( id ) {
+				Object.defineProperty( params, id, { 
+					get : function(){ return uniforms[ id ].value; }, 
+					set : function( v ){ uniforms[ id ].value = v; },
+					configurable : false 
+				} );
+			})( j );
 		}
 	}
 
@@ -404,17 +412,34 @@ WAGNER.SepiaPass = function() {
 
 WAGNER.SepiaPass.prototype = new WAGNER.Pass();
 
-WAGNER.NoisePass = function() {
+WAGNER.Pass.prototype.bindUniform = function( p, s, v, c ) {
 
-	WAGNER.Pass.call( this );
-	WAGNER.log( 'Denoise Pass constructor' );
-	this.loadShader( 'noise-fs.glsl', function() {
-		this.shader.uniforms.amount.value = .01;
+	Object.defineProperty( p, v, { 
+		get : function(){ return s.uniforms[ id ].value; }, 
+		set : c,
+		configurable : false 
 	} );
 
 }
 
+WAGNER.NoisePass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'Denoise Pass constructor' );
+	this.loadShader( 'noise-fs.glsl' );
+
+	this.params.noiseAmount = .1;
+
+}
+
 WAGNER.NoisePass.prototype = new WAGNER.Pass();
+
+WAGNER.NoisePass.prototype.run = function( c ) {
+
+	this.shader.uniforms.amount.value = this.params.noiseAmount;
+	c.pass( this.shader );
+
+}
 
 WAGNER.VignettePass = function() {
 
@@ -497,10 +522,10 @@ WAGNER.ZoomBlurPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'ZoomBlurPass Pass constructor' );
-	this.loadShader( 'zoom-blur-fs.glsl', function() {
-		this.shader.uniforms.center.value.set( .5, .5 );
-		this.shader.uniforms.strength.value = this.strength;
-	} );
+	this.loadShader( 'zoom-blur-fs.glsl' );
+
+	this.params.center = new THREE.Vector2( .5, .5 );
+	this.params.strength = 2;
 
 }
 
@@ -508,7 +533,8 @@ WAGNER.ZoomBlurPass.prototype = new WAGNER.Pass();
 
 WAGNER.ZoomBlurPass.prototype.run = function( c ) {
 
-	this.shader.uniforms.strength.value = this.strength;
+	this.shader.uniforms.center.value.copy ( this.params.center );
+	this.shader.uniforms.strength.value = this.params.strength;
 	c.pass( this.shader );
 
 }
@@ -769,3 +795,6 @@ WAGNER.CircularBlurPass = function() {
 }
 
 WAGNER.CircularBlurPass.prototype = new WAGNER.Pass();
+
+window.WAGNER = WAGNER;
+})();
