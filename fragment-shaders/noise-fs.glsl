@@ -1,5 +1,6 @@
 uniform sampler2D tDiffuse;
 uniform float amount;
+uniform float time;
 varying vec2 vUv;
 
 float rand(vec2 co) {
