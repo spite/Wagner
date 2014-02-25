@@ -21,7 +21,7 @@ Include the libs
 */
 
 var composer = new WAGNER.Composer( renderer );
-composet.setSize( window.innerWidth, window.innerHeight ); // or whatever resolution
+composer.setSize( window.innerWidth, window.innerHeight ); // or whatever resolution
 
 var zoomBlurPass = new WAGNER.ZoomBlurPass();
 var multiPassBloomPass = new WAGNER.MultiPassBloomPass();
