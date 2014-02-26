@@ -55,6 +55,20 @@ ShaderLoader.prototype.onLoaded = function( callback ) {
 
 ShaderLoader.prototype.get = function( id ) {
 
-	return this.shaders[ id ].content;
+	function ShaderLoaderGetException( message ) {
+		this.message = 'Cannot find shader "' + id + '".';
+		this.name = "ShaderLoaderGetException";
+		this.toString = function() {
+			return this.message
+		};
+	}
+
+	var s = this.shaders[ id ];
+	if( !s ) {
+		throw new ShaderLoaderGetException( id, pass );
+		return;
+	} 
+
+	return s.content;
 
 }

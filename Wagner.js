@@ -425,7 +425,7 @@ WAGNER.Pass.prototype.bindUniform = function( p, s, v, c ) {
 WAGNER.NoisePass = function() {
 
 	WAGNER.Pass.call( this );
-	WAGNER.log( 'Denoise Pass constructor' );
+	WAGNER.log( 'Noise Pass constructor' );
 	this.loadShader( 'noise-fs.glsl' );
 
 	this.params.noiseAmount = .1;
@@ -445,14 +445,22 @@ WAGNER.VignettePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Vignette Pass constructor' );
-	this.loadShader( 'vignette-fs.glsl', function() {
-		this.shader.uniforms.amount.value = 1;
-		this.shader.uniforms.size.value = .1;
-	} );
+	this.loadShader( 'vignette-fs.glsl' );
+
+	this.params.amount = 1;
+	this.params.size = .1;
 
 }
 
 WAGNER.VignettePass.prototype = new WAGNER.Pass();
+
+WAGNER.VignettePass.prototype.run = function( c ) {
+
+	this.shader.uniforms.amount.value = this.params.amount;
+	this.shader.uniforms.size.value = this.params.size;
+	c.pass( this.shader );
+
+}
 
 WAGNER.Vignette2Pass = function() {
 
@@ -468,14 +476,22 @@ WAGNER.DenoisePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Denoise Pass constructor' );
-	this.loadShader( 'denoise-fs.glsl', function() {
-		this.shader.uniforms.exponent.value = 5;
-		this.shader.uniforms.strength.value = 10;
-	} );
+	this.loadShader( 'denoise-fs.glsl' );
+
+	this.params.exponent = 5;
+	this.params.strength = 10;
 
 }
 
 WAGNER.DenoisePass.prototype = new WAGNER.Pass();
+
+WAGNER.DenoisePass.prototype.run = function( c ) {
+
+	this.shader.uniforms.exponent.value = this.params.exponent;
+	this.shader.uniforms.strength.value = this.params.strength;
+	c.pass( this.shader );
+
+}
 
 WAGNER.BoxBlurPass = function() {
 
@@ -517,8 +533,6 @@ WAGNER.FullBoxBlurPass.prototype.run = function( c ) {
 }
 
 WAGNER.ZoomBlurPass = function() {
-
-	this.strength = 2;
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'ZoomBlurPass Pass constructor' );
@@ -683,7 +697,7 @@ WAGNER.GuidedFullBoxBlurPass.prototype.isLoaded = function() {
 
 WAGNER.GuidedFullBoxBlurPass.prototype.run = function( c ) {
 
-	var v = 20;
+	var v = 10;
 	this.guidedBoxPass.shader.uniforms.invertBiasMap.value = 0;
 	this.guidedBoxPass.shader.uniforms.delta.value.set( v / c.width, 0 );
 	c.pass( this.guidedBoxPass.shader );

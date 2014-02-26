@@ -37,6 +37,7 @@
 <!--<script src="js/OculusRiftEffect.js"></script>-->
 <script src="http://spite.github.io/rstats/rStats.js" ></script>
 <script src="Wagner.js"></script>
+<script src="Wagner.experimental.js"></script>
 <script src="ShaderLoader.js"></script>
 
 <script>
@@ -46,6 +47,7 @@
 var composer;
 
 var rS = new rStats( {
+	CSSPath: 'http://spite.github.io/rstats/',
 	values: {
 		frame: { caption: 'Total frame time (ms)', over: 16 },
         raf: { caption: 'Time since last rAF (ms)' },
@@ -67,26 +69,39 @@ for( var j = 0; j < links.length; j++ ) {
 
 var container, renderer, scene, camera, mesh, torus, material, fov = 70;
 var model, quad, oculusEffect;
+var light;
 
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
-	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, edgeDetectionPass,
+	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, sobelEdgeDetectionPass,
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
-	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass;
+	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass, dotScreenPass,
+	circularBlur, poissonDiscBlur, cannyEdgeDetectionPass, freiChenEdgeDetectionPass,
+	crossHatchingPass;
 
-var depthTexture, normalTexture, colorTexture;
+var depthTexture, normalTexture, colorTexture, uvTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
 var modelMaterial = new THREE.MeshPhongMaterial( { 
-	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324.jpg' ), 
-	normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
+	color: 0xffffff,
+	emissive: 0xffffff,
+	map: THREE.ImageUtils.loadTexture( 'assets/textures/earth_sphere.jpg' ), 
+	//normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
 	normalScale: new THREE.Vector2( .8, -.8 ),
 	shininess: 10,
 	specular: 0xffffff,
 	wireframe: false
-} )
+} );
+var uvMaterial = new THREE.MeshBasicMaterial();
+/*modelMaterial = new THREE.MeshPhongMaterial( {
+	color: new THREE.Color( 0.1, 0.04, 0.02 ),
+	depthTest: true,
+	depthWrite: false,
+	transparent: true,
+	blending: THREE.AdditiveBlending
+} );*/
 //modelMaterial = new THREE.MeshNormalMaterial();
 
 var sL = new ShaderLoader()
-sL.add( 'orto-vs', 'vertex-shaders/orto-vs.glsl' );
+sL.add( 'depth-vs', 'vertex-shaders/packed-depth-vs.glsl' );
 sL.add( 'depth-fs', 'fragment-shaders/packed-depth-fs.glsl' );
 sL.load();
 sL.onLoaded( function() {
@@ -95,9 +110,26 @@ sL.onLoaded( function() {
 			mNear: { type: 'f', value: 1 },
 			mFar: { type: 'f', value: 10000 }
 		},
-		vertexShader: sL.get( 'orto-vs' ),
+		vertexShader: sL.get( 'depth-vs' ),
 		fragmentShader: sL.get( 'depth-fs' ),
-		shading: THREE.FlatShading
+		shading: THREE.SmoothShading
+	} );
+} );
+
+var sL = new ShaderLoader()
+sL.add( 'uv-vs', 'vertex-shaders/packed-depth-vs.glsl' );
+sL.add( 'uv-fs', 'fragment-shaders/uv-material-fs.glsl' );
+sL.load();
+sL.onLoaded( function() {
+	uvMaterial = new THREE.ShaderMaterial( {
+		uniforms: {
+			mNear: { type: 'f', value: 1 },
+			mFar: { type: 'f', value: 10000 },
+			repeat: { type: 'v2', value: new THREE.Vector2( 4, 4 ) }
+		},
+		vertexShader: sL.get( 'uv-vs' ),
+		fragmentShader: sL.get( 'uv-fs' ),
+		shading: THREE.SmoothShading
 	} );
 } );
 
@@ -132,7 +164,7 @@ function init() {
 	camera.position.z = 1000;
 	scene.add( camera );
 
-	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: false } );
+	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
     //oculusEffect = new THREE.OculusRiftEffect(renderer, {worldScale: 100});
@@ -150,7 +182,7 @@ function init() {
 	if( useTeapot ) {
 		
 		var loader = new THREE.JSONLoader();
-		loader.load( 'teapot.js', function( data ) { 
+		loader.load( 'assets/models/LeePerrySmith.js', function( data ) { 
 			data.computeCentroids();
 			data.computeFaceNormals();
 			data.computeVertexNormals();
@@ -159,7 +191,10 @@ function init() {
 				data,
 				modelMaterial
 			);
-			model.scale.set ( 10, 10, 10 );
+			var scale = 100;
+			model.scale.set ( scale, scale, scale );
+			model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
+			model.material.map.repeat.set( 4, 400 );
 			scene.add( model );
 		} );
 
@@ -174,7 +209,7 @@ function init() {
 		model.scale.set( 4, 4,4 );*/
 
 		var s = new THREE.CubeGeometry( 10, 10, 10, 1, 1 ,1 );
-		//var s = new THREE.IcosahedronGeometry( 5, 3 );
+		var s = new THREE.IcosahedronGeometry( 5, 3 );
 		var g = new THREE.Geometry();
 		var r = 2000;
 		for( var j = 0; j < 100 ; j++ ) {
@@ -195,7 +230,6 @@ function init() {
 
 	var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
-	var light;
 	var ambient = new THREE.AmbientLight( 0x444444 );
 	scene.add( ambient );
 
@@ -222,7 +256,7 @@ function init() {
 	renderer.shadowMapEnabled = true;
 	renderer.shadowMapType = THREE.PCFShadowMap;
 
-	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
+	composer = new WAGNER.Composer( renderer, { useRGBA: true } );
 
 	invertPass = new WAGNER.InvertPass();
 	boxBlurPass = new WAGNER.BoxBlurPass();
@@ -230,22 +264,26 @@ function init() {
 	zoomBlurPass = new WAGNER.ZoomBlurPass();
 	multiPassBloomPass = new WAGNER.MultiPassBloomPass();
 	denoisePass = new WAGNER.DenoisePass();
-	sepiaPass = new WAGNER.SepiaPass();
 	noisePass = new WAGNER.NoisePass();
 	vignettePass = new WAGNER.VignettePass();
 	vignette2Pass = new WAGNER.Vignette2Pass();
 	CGAPass = new WAGNER.CGAPass();
-	edgeDetectionPass = new WAGNER.EdgeDetectionPass();
+	sobelEdgeDetectionPass = new WAGNER.SobelEdgeDetectionPass();
 	dirtPass = new WAGNER.DirtPass();
 	blendPass = new WAGNER.BlendPass();
 	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
-	SSAOPass = new WAGNER.SSAOPass();
+	//SSAOPass = new WAGNER.SSAOPass();
 	pixelatePass = new WAGNER.PixelatePass();
 	rgbSplitPass = new WAGNER.RGBSplitPass();
 	artPass = new WAGNER.ArtPass();
 	chromaticAberrationPass = new WAGNER.ChromaticAberrationPass();
 	barrelBlurPass = new WAGNER.BarrelBlurPass();
 	oldVideoPass = new WAGNER.OldVideoPass();
+	dotScreenPass = new WAGNER.DotScreenPass();
+	circularBlur = new WAGNER.CircularBlurPass();
+	poissonDiscBlur = new WAGNER.PoissonDiscBlurPass();
+	freiChenEdgeDetectionPass = new WAGNER.FreiChenEdgeDetectionPass();
+	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 
 	onWindowResize();
 
@@ -262,9 +300,10 @@ function onWindowResize() {
 	renderer.setSize( s * w, s * h );
 	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
 	composer.setSize( w, h );
-	depthTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	depthTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
 	normalTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
-	colorTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	colorTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
+	uvTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
 
 }
 
@@ -307,35 +346,42 @@ var startTime = Date.now();
 
 function render() {
 	
-	var t = Date.now();
+	var t = .001 * Date.now();
 
 	rS( 'frame' ).start();
     rS( 'rAF' ).tick();
     rS( 'FPS' ).frame();
 
+	light.position.set( 0, 1500 * Math.cos( t ), 1000 * Math.sin( t ) );
+
     if( model ) {
 	    /*model.rotation.x += .001;
 	    model.rotation.y += .001;
 	    model.rotation.z += .005;*/
-	}
+	
 	camera.position.x += ( mouseX - camera.position.x ) * .05;
 	camera.position.y += ( - mouseY - camera.position.y ) * .05;
 	camera.lookAt( scene.position );
-
 
 	var k = Math.sin( .002 * t ) * .02 + .02;
 	renderer.autoClearColor = true;
 	composer.reset();
 
-	model.material = depthMaterial;
+	/*model.material = depthMaterial;
 	composer.render( scene, camera );
 	composer.toTexture( depthTexture );
+
+	model.material = uvMaterial;
+	composer.render( scene, camera );
+	composer.toTexture( uvTexture );*/
 
 	model.material = modelMaterial;
 	composer.render( scene, camera );
 
 //	composer.pass( invertPass );
-//	composer.pass( zoomBlurPass );
+	zoomBlurPass.params.center.set( .5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
+	zoomBlurPass.params.strength = .5 + .4 * Math.sin( t );
+	composer.pass( zoomBlurPass );
 //	composer.pass( multiPassBloomPass );
 //	composer.pass( denoisePass );
 //	composer.pass( fullBoxBlurPass );
@@ -352,32 +398,62 @@ function render() {
 	composer.pass( multiPassBloomPass );
 	composer.pass( dirtPass );*/
 
-	if( SSAOPass.isLoaded() ) {
+	/*if( crossHatchingPass.isLoaded() ) {
+		crossHatchingPass.shader.uniforms.tUV.value = uvTexture;
+		composer.pass( crossHatchingPass );
+	}*/
+
+	/*if( SSAOPass.isLoaded() ) {
 		SSAOPass.shader.uniforms.tDepth.value = depthTexture;
-		composer.pass( SSAOPass );
-	}
+		//composer.pass( SSAOPass );
+	}*/
 
 	if( guidedFullBoxBlurPass.isLoaded() ) {
 		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.isPacked.value = true;
 		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
+		composer.pass( guidedFullBoxBlurPass );
 	}
 
-	//composer.pass( artPass );
-
-	composer.pass( oldVideoPass );
-
+//	composer.pass( artPass );
+//	composer.pass( oldVideoPass );
+//	composer.pass( poissonDiscBlur );
+//	composer.pass( circularBlur );
 //	composer.pass( barrelBlurPass );
-//	composer.pass( chromaticAberrationPass );
-//	composer.pass( multiPassBloomPass );
-//	composer.pass( edgeDetectionPass );
-//	composer.pass( guidedFullBoxBlurPass );
+//	composer.pass( sobelEdgeDetectionPass );
+//	composer.pass( pixelatePass )
 //	composer.pass( rgbSplitPass )
+// 	composer.pass( zoomBlurPass );
+//	composer.pass( poissonDiscBlur );
+//	composer.pass( guidedFullBoxBlurPass );
+//	composer.pass( multiPassBloomPass );
+//	composer.pass( chromaticAberrationPass );
+//	composer.pass( invertPass );
 //	composer.pass( multiPassBloomPass );
 //	composer.pass( dirtPass );
 //	composer.pass( pixelatePass )
 //	composer.pass( CGAPass );
+//	composer.pass( freiChenEdgeDetectionPass );
 
+	//composer.pass( invertPass );
+	//composer.pass( sepiaPass );
+
+	//renderer.autoClearColor = false;
+	//composer.render( scene, camera, true );
+
+//	composer.pass( pixelatePass )
+//	vignettePass.params.amount = .5 + .4 * Math.sin( t );
+//	composer.pass( vignettePass );
+	denoisePass.params.exponent = .5 + .4 * Math.sin( t * 1.1 );
+	denoisePass.params.strength = .5 + .4 * Math.sin( t );
+	composer.pass( denoisePass );
+	noisePass.params.noiseAmount = .5 + .4 * Math.sin( t );
+//	composer.pass( noisePass );
 	composer.toScreen();
+
+	//renderer.autoClearColor = false;
+	//renderer.render( scene, camera );
+
+}
 
     rS( 'frame' ).end();
     rS().update();
