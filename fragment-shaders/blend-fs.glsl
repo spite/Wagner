@@ -2,7 +2,13 @@ varying vec2 vUv;
 uniform sampler2D tDiffuse;
 uniform sampler2D tDiffuse2;
 uniform vec2 resolution;
+uniform vec2 resolution2;
+uniform float aspectRatio;
+uniform float aspectRatio2;
 uniform int mode;
+uniform int sizeMode;
+
+vec2 vUv2 = vUv;
 
 float applyOverlayToChannel( float base, float blend ) {
 
@@ -30,8 +36,22 @@ float applyColorDodgeToChannel( float base, float blend ) {
 
 void main() {
 
+	if( sizeMode == 1 ) {
+		
+		if( aspectRatio2 > aspectRatio ) {
+			vUv2.x *= aspectRatio / aspectRatio2;
+			vUv2.x += .5 * ( 1. - aspectRatio / aspectRatio2 );
+		}
+
+		if( aspectRatio2 < aspectRatio ) {
+			vUv2.y *= aspectRatio2 / aspectRatio;
+			vUv2.y += .5 * ( 1. - aspectRatio2 / aspectRatio );
+		}
+			
+	}
+
 	vec4 base = texture2D( tDiffuse, vUv );
-	vec4 blend = texture2D( tDiffuse2, vUv );
+	vec4 blend = texture2D( tDiffuse2, vUv2 );
 
 	if( mode == 1 ) { // normal
 

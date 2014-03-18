@@ -199,8 +199,8 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		sampler2D: { type: 't', value: function() { return new THREE.Texture() } },
 		samplerCube: { type: 't', value: function() {} },
 
-		bool: { type: 'b', value: function() { return 0; } },
-		int: { type: 'i', value: function() { return 0; } },
+		bool:  { type: 'b', value: function() { return 0; } },
+		int:   { type: 'i', value: function() { return 0; } },
 		float: { type: 'f', value: function() { return 0; } },
 		
 		vec2: { type: 'v2', value: function() { return new THREE.Vector2() } },
@@ -660,8 +660,12 @@ WAGNER.DirtPass.prototype.isLoaded = function() {
 
 WAGNER.DirtPass.prototype.run = function( c ) {
 
+	this.blendPass.shader.uniforms.sizeMode.value = 1;
 	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.SoftLight;
 	this.blendPass.shader.uniforms.tDiffuse2.value = this.dirtTexture;
+	this.blendPass.shader.uniforms.resolution2.value.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
+	this.blendPass.shader.uniforms.aspectRatio.value = c.read.width / c.read.height;
+	this.blendPass.shader.uniforms.aspectRatio2.value = this.dirtTexture.image.width / this.dirtTexture.image.height;
 	c.pass( this.blendPass.shader );
 
 }
@@ -809,6 +813,16 @@ WAGNER.CircularBlurPass = function() {
 }
 
 WAGNER.CircularBlurPass.prototype = new WAGNER.Pass();
+
+WAGNER.ToonPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'ToonPass Pass constructor' );
+	this.loadShader( 'toon-fs.glsl' );
+
+}
+
+WAGNER.ToonPass.prototype = new WAGNER.Pass();
 
 window.WAGNER = WAGNER;
 })();
