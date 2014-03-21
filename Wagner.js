@@ -568,6 +568,8 @@ WAGNER.MultiPassBloomPass = function() {
 
 	this.params[ 'blurAmount' ] = 20;
 	this.params[ 'applyZoomBlur' ] = false;
+	this.params[ 'zoomBlurStrength' ] = 2;
+	this.params[ 'useTexture' ] = false;
 
 }
 
@@ -592,15 +594,24 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 	}
 
 	this.composer.reset();
-	this.composer.setSource( c.output );
+	if( this.params.useTexture ) {
+		this.composer.setSource( this.params.glowTexture );
+	} else {
+		this.composer.setSource( c.output );
+	}
 	this.boxPass.shader.uniforms.delta.value.set( this.params[ 'blurAmount' ] / this.composer.width, 0 );
 	this.composer.pass( this.boxPass.shader );
 	this.boxPass.shader.uniforms.delta.value.set( 0, this.params[ 'blurAmount' ] / this.composer.height );
 	this.composer.pass( this.boxPass.shader );
 
 	if( this.params[ 'applyZoomBlur' ] ) {
+		this.zoomBlur.params.strength = this.params.zoomBlurStrength;
 		this.composer.pass( this.zoomBlur );
 	}
+
+	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.Screen;
+	this.blendPass.shader.uniforms.tDiffuse2.value = this.params.glowTexture;
+	c.pass( this.blendPass.shader );
 
 	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.Screen;
 	this.blendPass.shader.uniforms.tDiffuse2.value = this.composer.output;
@@ -823,6 +834,16 @@ WAGNER.ToonPass = function() {
 }
 
 WAGNER.ToonPass.prototype = new WAGNER.Pass();
+
+WAGNER.FXAAPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'FXAA Pass constructor' );
+	this.loadShader( 'fxaa-fs.glsl' );
+
+}
+
+WAGNER.FXAAPass.prototype = new WAGNER.Pass();
 
 window.WAGNER = WAGNER;
 })();
