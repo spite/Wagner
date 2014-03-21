@@ -76,7 +76,7 @@ var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, 
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
 	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass, dotScreenPass,
 	circularBlur, poissonDiscBlur, cannyEdgeDetectionPass, freiChenEdgeDetectionPass,
-	crossHatchingPass, toonPass, fxaaPass;
+	toonPass, fxaaPass;
 
 var depthTexture, normalTexture, colorTexture, uvTexture, scaledTexture, glowTexture;
 var depthMaterial = new THREE.MeshDepthMaterial();
@@ -283,7 +283,7 @@ function init() {
 	circularBlur = new WAGNER.CircularBlurPass();
 	poissonDiscBlur = new WAGNER.PoissonDiscBlurPass();
 	freiChenEdgeDetectionPass = new WAGNER.FreiChenEdgeDetectionPass();
-	crossHatchingPass = new WAGNER.CrossHatchingPass();
+	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	toonPass = new WAGNER.ToonPass();
 	fxaaPass = new WAGNER.FXAAPass();
 
@@ -414,10 +414,10 @@ function render() {
 	composer.pass( multiPassBloomPass );
 	composer.pass( dirtPass );*/
 
-	if( crossHatchingPass.isLoaded() ) {
+	/*if( crossHatchingPass.isLoaded() ) {
 		crossHatchingPass.shader.uniforms.tUV.value = uvTexture;
 	//	composer.pass( crossHatchingPass );
-	}
+	}*/
 
 	/*if( SSAOPass.isLoaded() ) {
 		SSAOPass.shader.uniforms.tDepth.value = depthTexture;
