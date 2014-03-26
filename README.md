@@ -52,16 +52,17 @@ What works
     - DOF (simple)
     - SSAO (simple)
 - uniform reflection from GLSL source is working enough to be usable for most cases
+- settings different path for shader loading
 
 What still doesn't work / needs work
 ------------------------------------
 
 - ~~ShaderLoader will probably be removed, or be transparent to the user~~
-- Passing parameters to WAGNER.ShaderPass from main code
+- ~~Passing parameters to WAGNER.ShaderPass from main code~~
 - ~~Correct use of textures of different dimensions along the chain~~
 - Resizing correctly all render targets
 - ~~Multiple Composers working at the same time~~
-- Shaders that are not ported to WAGNER.Pass: pixelate, rgb split, different single-pass bloom
+- Shaders that are not ported to WAGNER.Pass: ~~pixelate~~, ~~rgb split~~, different single-pass bloom
 - Shaders that haven't even been ported to WAGNER: camera motion blur, directional blur, gamma, levels, 
 - Alias definition of passes (previously loadPass()) legacy
 - uniform reflection from GLSL source doesn't support structures (I don't even know if WebGL supports structures)
