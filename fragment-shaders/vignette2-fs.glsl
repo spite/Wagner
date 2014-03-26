@@ -2,8 +2,8 @@ varying vec2 vUv;
 uniform sampler2D tDiffuse;
 uniform vec2 resolution;
 
-#define VIG_REDUCTION_POWER 2.05
-#define VIG_BOOST 2.1
+uniform float reduction;
+uniform float boost;
 
 void main() {
 
@@ -11,7 +11,7 @@ void main() {
 
 	vec2 center = resolution * 0.5;
 	float vignette = distance( center, gl_FragCoord.xy ) / resolution.x;
-    vignette = VIG_BOOST - vignette * VIG_REDUCTION_POWER;
+    vignette = boost - vignette * reduction;
 
     color.rgb *= vignette;
 	gl_FragColor = color;
