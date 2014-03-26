@@ -953,5 +953,29 @@ WAGNER.HalftoneCMYKPass = function() {
 
 WAGNER.HalftoneCMYKPass.prototype = Object.create( WAGNER.Pass.prototype );
 
+WAGNER.CrossFadePass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'CrossFadePass Pass constructor' );
+	this.loadShader( 'crossfade-fs.glsl' );
+
+	this.params.tDiffuse2 = null;
+	this.params.tFadeMap = null;
+	this.params.threshold = 0;
+
+};
+
+WAGNER.CrossFadePass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.CrossFadePass.prototype.run = function( c ) {
+
+	this.shader.uniforms.tDiffuse2.value = this.params.tDiffuse2;
+	this.shader.uniforms.tFadeMap.value = this.params.tFadeMap;
+	this.shader.uniforms.threshold.value = this.params.amount;
+
+	c.pass( this.shader );
+
+}
+
 window.WAGNER = WAGNER;
 })();
