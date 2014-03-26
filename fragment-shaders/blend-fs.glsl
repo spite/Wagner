@@ -7,6 +7,7 @@ uniform float aspectRatio;
 uniform float aspectRatio2;
 uniform int mode;
 uniform int sizeMode;
+uniform float opacity;
 
 vec2 vUv2 = vUv;
 
@@ -34,6 +35,24 @@ float applyColorDodgeToChannel( float base, float blend ) {
 
 }
 
+float applyLinearBurnToChannel( float base, float blend ) {
+
+	return max(base + blend - 1., 0.0 );
+
+}
+
+float applyLinearDodgeToChannel( float base, float blend ) {
+
+	return min( base + blend, 1. );
+
+}
+
+float applyLinearLightToChannel( float base, float blend ) {
+
+	return ( blend < .5 ) ? applyLinearBurnToChannel( base, 2. * blend ) : applyLinearDodgeToChannel( base, 2. * ( blend - .5 ) );
+
+}
+
 void main() {
 
 	if( sizeMode == 1 ) {
@@ -56,6 +75,7 @@ void main() {
 	if( mode == 1 ) { // normal
 
 		gl_FragColor = base;
+		gl_FragColor.a *= opacity;
 		return;
 
 	}
@@ -143,7 +163,7 @@ void main() {
 		gl_FragColor = gl_FragColor = vec4( 
 			applyOverlayToChannel( base.r, blend.r ),
 			applyOverlayToChannel( base.g, blend.g ),
-			applyOverlayToChannel( base.g, blend.b ),
+			applyOverlayToChannel( base.b, blend.b ),
 			applyOverlayToChannel( base.a, blend.a )
 		);
 		return;
@@ -170,6 +190,7 @@ void main() {
 			applyOverlayToChannel( base.b, blend.b ),
 			applyOverlayToChannel( base.a, blend.a )
 		);
+		gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );
 		return;
 
 	}
@@ -179,6 +200,14 @@ void main() {
 	}
 
 	if( mode == 17 ) { // linear light
+
+		gl_FragColor = vec4( 
+			applyLinearLightToChannel( base.r, blend.r ),
+			applyLinearLightToChannel( base.g, blend.g ),
+			applyLinearLightToChannel( base.b, blend.b ),
+			applyLinearLightToChannel( base.a, blend.a )
+		);
+		return;
 
 	}
 
