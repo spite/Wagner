@@ -3,18 +3,13 @@ uniform float amount;
 uniform float time;
 varying vec2 vUv;
 
-float rand(vec2 co) {
-	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
+float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
 
 void main() {
 
 	vec4 color = texture2D(tDiffuse, vUv);
-	
-	float diff = (rand(vUv) - 0.5) * amount;
-	color.r += diff;
-	color.g += diff;
-	color.b += diff;
+
+	color += amount * ( .5 - random( vec3( 1. ), length( gl_FragCoord ) ) );
 	
 	gl_FragColor = color;
 
