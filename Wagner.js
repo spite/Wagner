@@ -914,5 +914,44 @@ WAGNER.ASCIIPass = function() {
 
 WAGNER.ASCIIPass.prototype = Object.create( WAGNER.Pass.prototype );
 
+WAGNER.LEDPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'LEDPass Pass constructor' );
+	this.loadShader( 'led-fs.glsl', function() {
+		this.shader.uniforms.offset_red.value.set( 0, 0 );
+		this.shader.uniforms.offset_green.value.set( 0, 0 );
+		this.shader.uniforms.offset_blue.value.set( 0, 0 );
+		this.shader.uniforms.dotdistance.value = 5;
+	} );
+
+};
+
+WAGNER.LEDPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.HalftonePass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'HalftonePass Pass constructor' );
+	this.loadShader( 'halftone-fs.glsl', function() {
+		this.shader.uniforms.pixelSize.value = 6;
+	} );
+
+};
+
+WAGNER.HalftonePass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.HalftoneCMYKPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'HalftoneCMYKPass Pass constructor' );
+	this.loadShader( 'halftone-cmyk-fs.glsl', function() {
+
+	} );
+
+};
+
+WAGNER.HalftoneCMYKPass.prototype = Object.create( WAGNER.Pass.prototype );
+
 window.WAGNER = WAGNER;
 })();
