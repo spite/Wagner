@@ -65,7 +65,7 @@ ShaderLoader.prototype.get = function( id ) {
 
 	var s = this.shaders[ id ];
 	if( !s ) {
-		throw new ShaderLoaderGetException( id, pass );
+		throw new ShaderLoaderGetException( id );
 		return;
 	} 
 
