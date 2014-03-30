@@ -12,17 +12,14 @@ float unpack_depth(const in vec4 color) {
 }
 
 float sampleBias( vec2 uv ) {
-	return unpack_depth( texture2D( tBias, uv ) );
+	return texture2D( tBias, uv ).r;
+	//return unpack_depth( texture2D( tBias, uv ) );
 }
 
 void main() {
 
 	float f = sampleBias( vUv );
-	//if( invertBiasMap == 1. ) f = 1. - f;
-	//f = 2. * abs( .5 - f );
-	f = abs( .5 - f );
-	f = smoothstep( .3, .7, f );
-	f *= 3.;
+//	if( invertBiasMap == 1. ) f = 1. - f;
 	vec4 o = texture2D( tDiffuse,vUv );
 	vec4 color=vec4(0.0);
 	float total=0.0;

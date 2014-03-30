@@ -1,5 +1,6 @@
 uniform sampler2D tDiffuse;
 uniform float amount;
+uniform float speed;
 uniform float time;
 varying vec2 vUv;
 
@@ -9,7 +10,7 @@ void main() {
 
 	vec4 color = texture2D(tDiffuse, vUv);
 
-	color += amount * ( .5 - random( vec3( 1. ), length( gl_FragCoord ) ) );
+	color += amount * ( .5 - random( vec3( 1. ), length( gl_FragCoord ) + speed * .01 * time ) );
 	
 	gl_FragColor = color;
 

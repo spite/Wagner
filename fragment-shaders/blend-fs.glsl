@@ -131,6 +131,7 @@ void main() {
 	if( mode == 9 ) { // screen
 
 		gl_FragColor = (1.0 - ((1.0 - base) * (1.0 - blend)));
+		gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );
 		return;
 
 	}
@@ -166,6 +167,7 @@ void main() {
 			applyOverlayToChannel( base.b, blend.b ),
 			applyOverlayToChannel( base.a, blend.a )
 		);
+		gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );
 		return;
 
 	}
