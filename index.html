@@ -35,10 +35,12 @@
 
 <script src="js/three.min.js"></script>
 <!--<script src="js/OculusRiftEffect.js"></script>-->
-<script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="../rStats/src/rStats.js" ></script>
+<!--<script src="http://spite.github.io/rstats/rStats.js" ></script>-->
 <script src="Wagner.js"></script>
 <script src="Wagner.experimental.js"></script>
 <script src="ShaderLoader.js"></script>
+<script src="js/debugTools.js"></script>
 
 <script>
 
@@ -76,10 +78,13 @@ var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, 
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
 	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass, dotScreenPass,
 	circularBlur, poissonDiscBlur, cannyEdgeDetectionPass, freiChenEdgeDetectionPass,
-	toonPass, fxaaPass;
+	toonPass, fxaaPass, highPassPass, grayscalePass, asciiPass, guidedBoxPass,
+	ledPass, halftonePass, halftoneCMYKPass;
+
+var draganPass, crossHatchingPass, ssaoPass;
 
 var depthTexture, normalTexture, colorTexture, uvTexture, scaledTexture, glowTexture;
-var depthMaterial = new THREE.MeshDepthMaterial();
+var depthMaterial;// = new THREE.MeshDepthMaterial();
 var modelMaterial = new THREE.MeshPhongMaterial( { 
 	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324-decal.jpg' ), 
 	normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
@@ -110,8 +115,8 @@ sL.onLoaded( function() {
 			mNear: { type: 'f', value: 1 },
 			mFar: { type: 'f', value: 10000 }
 		},
-		vertexShader: sL.get( 'depth-vs' ),
-		fragmentShader: sL.get( 'depth-fs' ),
+		vertexShader: this.get( 'depth-vs' ),
+		fragmentShader: this.get( 'depth-fs' ),
 		shading: THREE.SmoothShading
 	} );
 } );
@@ -125,10 +130,10 @@ sL.onLoaded( function() {
 		uniforms: {
 			mNear: { type: 'f', value: 1 },
 			mFar: { type: 'f', value: 10000 },
-			repeat: { type: 'v2', value: new THREE.Vector2( 4, 4 ) }
+			repeat: { type: 'v2', value: new THREE.Vector2( 1, 1 ) }
 		},
-		vertexShader: sL.get( 'uv-vs' ),
-		fragmentShader: sL.get( 'uv-fs' ),
+		vertexShader: this.get( 'uv-vs' ),
+		fragmentShader: this.get( 'uv-fs' ),
 		shading: THREE.SmoothShading
 	} );
 } );
@@ -256,9 +261,11 @@ function init() {
 	renderer.shadowMapEnabled = true;
 	renderer.shadowMapType = THREE.PCFShadowMap;
 
-	composer = new WAGNER.Composer( renderer, { useRGBA: true } );
+	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 
 	invertPass = new WAGNER.InvertPass();
+	sepiaPass = new WAGNER.SepiaPass();
+	noisePass = new WAGNER.NoisePass();
 	boxBlurPass = new WAGNER.BoxBlurPass();
 	fullBoxBlurPass = new WAGNER.FullBoxBlurPass();
 	zoomBlurPass = new WAGNER.ZoomBlurPass();
@@ -271,8 +278,8 @@ function init() {
 	sobelEdgeDetectionPass = new WAGNER.SobelEdgeDetectionPass();
 	dirtPass = new WAGNER.DirtPass();
 	blendPass = new WAGNER.BlendPass();
+	guidedBoxPass = new WAGNER.GuidedBoxBlurPass();
 	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
-	//SSAOPass = new WAGNER.SSAOPass();
 	pixelatePass = new WAGNER.PixelatePass();
 	rgbSplitPass = new WAGNER.RGBSplitPass();
 	artPass = new WAGNER.ArtPass();
@@ -283,9 +290,19 @@ function init() {
 	circularBlur = new WAGNER.CircularBlurPass();
 	poissonDiscBlur = new WAGNER.PoissonDiscBlurPass();
 	freiChenEdgeDetectionPass = new WAGNER.FreiChenEdgeDetectionPass();
-	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	toonPass = new WAGNER.ToonPass();
 	fxaaPass = new WAGNER.FXAAPass();
+	highPassPass = new WAGNER.HighPassPass();
+	grayscalePass = new WAGNER.GrayscalePass();
+	asciiPass = new WAGNER.ASCIIPass();
+	ledPass = new WAGNER.LEDPass();
+	halftonePass = new WAGNER.HalftonePass();
+	halftoneCMYKPass = new WAGNER.HalftoneCMYKPass();
+
+	//ssaoPass = new WAGNER.MultiPassSSAOPass();//SSAOPass();
+	ssaoPass = new WAGNER.SSAOPass();
+	crossHatchingPass = new WAGNER.CrossHatchingPass();
+	draganPass = new WAGNER.DraganPass();
 
 	onWindowResize();
 
@@ -371,6 +388,44 @@ function render() {
 	renderer.autoClearColor = true;
 	composer.reset();
 
+	//composer.render( scene, camera );
+
+	scene.overrideMaterial = depthMaterial;
+	composer.render( scene, camera, null, depthTexture );
+
+	scene.overrideMaterial = null;
+	composer.render( scene, camera );
+
+	ssaoPass.params.isPacked = false;
+	ssaoPass.params.texture = depthTexture;
+	ssaoPass.params.onlyOcclusion = false;
+	composer.pass( ssaoPass );
+
+	guidedFullBoxBlurPass.params.invertBiasMap = 1;
+	guidedFullBoxBlurPass.params.amount = 20;
+	guidedFullBoxBlurPass.params.tBias = depthTexture;
+	guidedFullBoxBlurPass.params.from = 1;
+	guidedFullBoxBlurPass.params.to = .7;
+	composer.pass( guidedFullBoxBlurPass );
+
+	rgbSplitPass.params.delta.set( 10, 0 );
+	composer.pass( rgbSplitPass );
+
+	multiPassBloomPass.params.applyZoomBlur = true;
+	multiPassBloomPass.params.blurAmount = 10;
+	composer.pass( multiPassBloomPass );
+
+	//composer.setSource( depthTexture );
+
+	/*scene.overrideMaterial = uvMaterial;
+	composer.render( scene, camera, null, uvTexture );
+
+	scene.overrideMaterial = null;
+	composer.render( scene, camera );
+
+	crossHatchingPass.params.texture = uvTexture;
+	composer.pass( crossHatchingPass );*/
+
 	/*model.material = depthMaterial;
 	composer.render( scene, camera );
 	composer.toTexture( depthTexture );
@@ -379,26 +434,23 @@ function render() {
 	composer.render( scene, camera );
 	composer.toTexture( uvTexture );*/
 
-	model.material = glowMaterial;//modelMaterial;
+/*	model.material = glowMaterial;//modelMaterial;
 	composer.render( scene, camera );
 	composer.toTexture( glowTexture );
 
 	model.material = modelMaterial;
-	composer.render( scene, camera );
-	composer.pass( fxaaPass );
+	composer.render( scene, camera );*/
+//	composer.pass( fxaaPass );
 	
 //	composer.pass( sobelEdgeDetectionPass );
 //	composer.toTexture( scaledTexture );
 
 //	composer.pass( invertPass );
-	zoomBlurPass.params.center.set( .5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
-	zoomBlurPass.params.strength = .5 + .4 * Math.sin( t );
+//	zoomBlurPass.params.center.set( .5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
+//	zoomBlurPass.params.strength = .5 + .4 * Math.sin( t );
 //	composer.pass( zoomBlurPass );
 
-	multiPassBloomPass.params.useTexture = true;
-	multiPassBloomPass.params.glowTexture = glowTexture;
-	multiPassBloomPass.params.applyZoomBlur = true;
-	composer.pass( multiPassBloomPass );
+//	composer.pass( multiPassBloomPass );
 //	composer.pass( denoisePass );
 //	composer.pass( fullBoxBlurPass );
 //	composer.pass( sepiaPass );
@@ -430,7 +482,7 @@ function render() {
 	//	composer.pass( guidedFullBoxBlurPass );
 	}
 
-	composer.pass( artPass );
+//	composer.pass( artPass );
 //	composer.pass( oldVideoPass );
 //	composer.pass( poissonDiscBlur );
 //	composer.pass( circularBlur );
@@ -445,7 +497,7 @@ function render() {
 //	composer.pass( chromaticAberrationPass );
 //	composer.pass( invertPass );
 //	composer.pass( multiPassBloomPass );
-	composer.pass( dirtPass );
+//	composer.pass( dirtPass );
 //	composer.pass( pixelatePass )
 //	composer.pass( CGAPass );
 //	composer.pass( freiChenEdgeDetectionPass );
@@ -465,6 +517,9 @@ function render() {
 	noisePass.params.noiseAmount = .5 + .4 * Math.sin( t );*/
 //	composer.pass( noisePass );
 //	composer.pass( toonPass );
+//	composer.pass( draganPass );
+//	composer.pass( asciiPass );
+	
 	composer.toScreen();
 
 	//renderer.autoClearColor = false;
