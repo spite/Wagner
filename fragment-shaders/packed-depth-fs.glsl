@@ -1,5 +1,8 @@
 uniform float mNear;
 uniform float mFar;
+uniform float isPacked;
+varying float depth;
+varying vec3 vNormal;
 
 vec4 pack_depth( const in float f ) {
 	vec4 color;
@@ -11,8 +14,19 @@ vec4 pack_depth( const in float f ) {
 }
 
 void main() {
+
+	/*float z = gl_FragCoord.z * 2.0 - 1.0 
 	float depth = gl_FragCoord.z / gl_FragCoord.w;
-	float color = 1. - ( depth - mNear ) / ( mFar - mNear ); //
-	color *= 256. * 256. * 256. * 256.;
-	gl_FragColor = pack_depth( color );
-}
+	float color = 1. - ( depth - mNear ) / ( mFar - mNear );
+
+	if( isPacked == 1. ) {
+		color *= 256. * 256. * 256. * 256.;
+		gl_FragColor = pack_depth( color );
+	} else {
+		gl_FragColor = vec4( vec3( color ), 1. );
+	}*/
+
+	gl_FragColor = vec4( vec3( 1. - depth ), 1. );
+//	gl_FragColor = vec4( vNormal.xyz, color );
+
+}	
