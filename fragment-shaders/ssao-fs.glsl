@@ -2,6 +2,8 @@ varying vec2 vUv;
 uniform sampler2D tDepth;
 uniform sampler2D tDiffuse;
 uniform vec2 resolution;
+uniform float isPacked;
+uniform float onlyOcclusion;
 
 float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
 
@@ -10,25 +12,26 @@ float unpack_depth(const in vec4 color) {
 }
 
 float sampleDepth( vec2 uv ) {
-	return unpack_depth( texture2D( tDepth, uv ) );
+	if( isPacked == 1. ) {
+		return unpack_depth( texture2D( tDepth, uv ) );
+	} else {
+		return texture2D( tDepth, uv ).r;
+	}
 }
 
 float occlusion = 0.;
 float depth = sampleDepth( vUv );
 
-void checkDepth( vec2 uv ) {
-	float d = depth - sampleDepth( uv );
-	//float t = .075;
-	//if( d > 0. && d < t ) occlusion += d;
-	//if( d > 0. ) d = 0.; else d = -d;
-	//if( d > .05 ) d = 0.;
-	if( d > 0. ) occlusion += 1.;
+void checkDepth( vec2 uv ) { // from iq's tutorial
+	float zd = 50.0 * min( depth - sampleDepth( uv ), 0.0 );
+    occlusion += 1.0 / ( 1.0 + zd * zd );
 }
 
 void main() {
 	
-	float xi = 8. / resolution.x;
-	float yi = 8. / resolution.y;
+	float r = 16.;
+	float xi = r / resolution.x;
+	float yi = r / resolution.y;
 
 	checkDepth( vUv + vec2( - 2. * xi, - 2. * yi ) );
 	checkDepth( vUv + vec2(      - xi, - 2. * yi ) );
@@ -59,15 +62,16 @@ void main() {
 	checkDepth( vUv + vec2(        xi, 2. * yi ) );
 	checkDepth( vUv + vec2(   2. * xi, 2. * yi ) );
 
-	occlusion = .1 * ( occlusion + random( vec3( gl_FragCoord.xy, depth ), length( gl_FragCoord ) ) );
-	occlusion = clamp( occlusion, 0., 1. );
+	occlusion /= 24.;
+	occlusion += .2 * random( vec3( gl_FragCoord.xy, depth ), length( gl_FragCoord ) );
 
-	vec3 color = texture2D( tDiffuse, vUv ).rgb;
-	color = mix( color, .5 * color, 1. - occlusion );
-
-	//color = vec3( occlusion );
-	//color = vec3( occlusion ) *  texture2D( tDiffuse, vUv ).rgb;
-	gl_FragColor = vec4( color, 1. );
+	if( onlyOcclusion == 1. ) {
+		gl_FragColor = vec4( vec3( occlusion ), 1. );
+	} else {
+		vec3 color = texture2D( tDiffuse, vUv ).rgb;
+		color = mix( vec3( 0. ), color, occlusion );
+		gl_FragColor = vec4( color, 1. );
+	}
 
 
 }
