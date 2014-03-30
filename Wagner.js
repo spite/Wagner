@@ -756,6 +756,8 @@ WAGNER.GuidedBoxBlurPass = function() {
 	this.params.delta = new THREE.Vector2( .01, 0 );
 	this.params.invertBiasMap = 0;
 	this.params.isPacked = 0;
+	this.params.from = 0;
+	this.params.to = 1;
 
 };
 
@@ -767,6 +769,8 @@ WAGNER.GuidedBoxBlurPass.prototype.run = function( c ) {
 	this.shader.uniforms.delta.value.copy( this.params.delta );
 	this.shader.uniforms.invertBiasMap.value = this.params.invertBiasMap;
 	this.shader.uniforms.isPacked.value = this.params.isPacked;
+	this.shader.uniforms.from.value = this.params.from;
+	this.shader.uniforms.to.value = this.params.to;
 	c.pass( this.shader );
 
 }
@@ -777,7 +781,14 @@ WAGNER.GuidedFullBoxBlurPass = function() {
 	WAGNER.log( 'FullBoxBlurPass Pass constructor' );
 	this.guidedBoxPass = new WAGNER.GuidedBoxBlurPass();
 
-	//this.params.amount = 
+
+	this.params.tBias = null;
+	this.params.invertBiasMap = 0;
+	this.params.isPacked = 0;
+	this.params.amount = 10;
+	this.params.from = 0;
+	this.params.to = 1;
+
 };
 
 WAGNER.GuidedFullBoxBlurPass.prototype = Object.create( WAGNER.Pass.prototype );
@@ -789,18 +800,15 @@ WAGNER.GuidedFullBoxBlurPass.prototype.isLoaded = function() {
 	}
 	return WAGNER.Pass.prototype.isLoaded.call( this );
 
-	this.params.tBias = null;
-	this.params.invertBiasMap = 0;
-	this.params.isPacked = 0;
-	this.params.amount = 10;
-
 };
 
 WAGNER.GuidedFullBoxBlurPass.prototype.run = function( c ) {
 
-	this.guidedBoxPass.params.invertBiasMap = this.invertBiasMap;
-	this.guidedBoxPass.params.isPacked = this.isPacked;
+	this.guidedBoxPass.params.invertBiasMap = this.params.invertBiasMap;
+	this.guidedBoxPass.params.isPacked = this.params.isPacked;
 	this.guidedBoxPass.params.tBias = this.params.tBias;
+	this.guidedBoxPass.params.from = this.params.from;
+	this.guidedBoxPass.params.to = this.params.to;
 	this.guidedBoxPass.params.delta.set( this.params.amount / c.width, 0 );
 	c.pass( this.guidedBoxPass );
 	this.guidedBoxPass.params.delta.set( 0, this.params.amount / c.height );
@@ -812,8 +820,7 @@ WAGNER.PixelatePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'PixelatePass Pass constructor' );
-	this.loadShader( 'pixelate-fs.glsl', function() {
-	} );
+	this.loadShader( 'pixelate-fs.glsl' );
 
 	this.params.amount = 320;
 
@@ -1039,6 +1046,44 @@ WAGNER.CrossFadePass.prototype.run = function( c ) {
 	this.shader.uniforms.tFadeMap.value = this.params.tFadeMap;
 	this.shader.uniforms.amount.value = this.params.amount;
 
+	c.pass( this.shader );
+
+}
+
+WAGNER.SSAOPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'SSAOPass Pass constructor' );
+	this.loadShader( 'ssao-fs.glsl', function( fs ) {
+		
+		/*this.shader.uniforms.pSphere.value = [
+			new THREE.Vector3(-0.010735935, 0.01647018, 0.0062425877),
+			new THREE.Vector3(-0.06533369, 0.3647007, -0.13746321),
+			new THREE.Vector3(-0.6539235, -0.016726388, -0.53000957),
+			new THREE.Vector3(0.40958285, 0.0052428036, -0.5591124),
+			new THREE.Vector3(-0.1465366, 0.09899267, 0.15571679),
+			new THREE.Vector3(-0.44122112, -0.5458797, 0.04912532),
+			new THREE.Vector3(0.03755566, -0.10961345, -0.33040273),
+			new THREE.Vector3(0.019100213, 0.29652783, 0.066237666),
+			new THREE.Vector3(0.8765323, 0.011236004, 0.28265962),
+			new THREE.Vector3(0.29264435, -0.40794238, 0.15964167)
+		];*/
+		
+	} );
+
+	this.params.texture = null;
+	this.params.isPacked = false;
+	this.params.onlyOcclusion = false;
+
+};
+
+WAGNER.SSAOPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.SSAOPass.prototype.run = function( c ) {
+
+	this.shader.uniforms.tDepth.value = this.params.texture;
+	this.shader.uniforms.isPacked.value = this.params.isPacked;
+	this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
 	c.pass( this.shader );
 
 }
