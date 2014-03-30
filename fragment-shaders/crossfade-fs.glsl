@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse
+uniform sampler2D tDiffuse;
 uniform sampler2D tDiffuse2;
 uniform sampler2D tFadeMap;
 uniform vec2 resolution;
