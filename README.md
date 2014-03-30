@@ -73,3 +73,14 @@ Credits
 Composer following the work of alteredq's [THREE.EffectComposer](https://github.com/mrdoob/three.js/blob/master/examples/js/postprocessing/EffectComposer.js)
 
 Most of the shaders are from [https://github.com/evanw/glfx.js](https://github.com/evanw/glfx.js). Others are from different sources and forums, papers, or my own.
+
+License
+=======
+
+MIT licensed
+
+Copyright (C) 2014 Jaume Sanchez Elias - All shaders are copyright of their respective authors.
+
+I'm trying to trace the original source for some of the common shaders. If your code is featured in the shaders folders, and wish to be correctly credited, or the code removed, please open an issue.
+
+http://www.clicktorelease.com
