@@ -4,6 +4,8 @@ uniform sampler2D tBias;
 uniform vec2 delta;
 uniform float invertBiasMap;
 uniform float isPacked;
+uniform float from;
+uniform float to;
 
 float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
 
@@ -12,7 +14,7 @@ float unpack_depth(const in vec4 color) {
 }
 
 float sampleBias( vec2 uv ) {
-	return texture2D( tBias, uv ).r;
+	return smoothstep( from, to, texture2D( tBias, uv ).r );
 	//return unpack_depth( texture2D( tBias, uv ) );
 }
 
