@@ -8,11 +8,11 @@ uniform float mFar;
 
 void main() {
 
-	vUv = uv;
-	vNormal = normalMatrix * normal;
+	vUv = vec2( 1. );//uv;
+	vNormal = vec3( 1. );//normalMatrix * normal;
 
 	vec4 viewPos = vec4( modelViewMatrix * vec4( position, 1.0 ) ); // this will transform the vertex into eyespace
-    depth = 1. - ( 1. + viewPos.z ) / ( 1. - 10000. );
+    depth = 1. - ( mNear + viewPos.z ) / ( mNear - mFar );
 
 	vPosition = vec4( modelViewMatrix * vec4( position, 1.0 ) ).xyz;
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
