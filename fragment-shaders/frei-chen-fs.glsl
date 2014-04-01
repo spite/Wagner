@@ -6,7 +6,7 @@
  *
  */
 
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 varying vec2 vUv;
 uniform vec2 resolution;
 vec2 texel = vec2(1.0 / resolution.x, 1.0 / resolution.y);
@@ -41,7 +41,7 @@ void main(void) {
 	/* fetch the 3x3 neighbourhood and use the RGB vector's length as intensity value */
 	for (float i=0.0; i<3.0; i++) {
 		for (float j=0.0; j<3.0; j++) {
-			sample = texture2D(tDiffuse, vUv + texel * vec2(i-1.0,j-1.0) ).rgb;
+			sample = texture2D(tInput, vUv + texel * vec2(i-1.0,j-1.0) ).rgb;
 			I[int(i)][int(j)] = length(sample);
 		}
 	}
@@ -55,6 +55,6 @@ void main(void) {
 	float M = (cnv[0] + cnv[1]) + (cnv[2] + cnv[3]);
 	float S = (cnv[4] + cnv[5]) + (cnv[6] + cnv[7]) + (cnv[8] + M);
 
-	gl_FragColor = vec4(vec3(sqrt(M/S)), texture2D( tDiffuse, vUv ).a );
+	gl_FragColor = vec4(vec3(sqrt(M/S)), texture2D( tInput, vUv ).a );
 
 }

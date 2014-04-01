@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform float amount;
 uniform float speed;
 uniform float time;
@@ -8,7 +8,7 @@ float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,s
 
 void main() {
 
-	vec4 color = texture2D(tDiffuse, vUv);
+	vec4 color = texture2D(tInput, vUv);
 
 	color += amount * ( .5 - random( vec3( 1. ), length( gl_FragCoord ) + speed * .01 * time ) );
 	

@@ -1,5 +1,5 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 
 void main()
 {
@@ -10,22 +10,22 @@ void main()
    {
         for ( int j = -3; j < 3; j++)
         {
-            sum += texture2D(tDiffuse, texcoord + vec2(j, i)*0.004) * 0.25;
+            sum += texture2D(tInput, texcoord + vec2(j, i)*0.004) * 0.25;
         }
    }
-       if (texture2D(tDiffuse, texcoord).r < 0.3)
+       if (texture2D(tInput, texcoord).r < 0.3)
     {
-       gl_FragColor = sum*sum*0.012 + texture2D(tDiffuse, texcoord);
+       gl_FragColor = sum*sum*0.012 + texture2D(tInput, texcoord);
     }
     else
     {
-        if (texture2D(tDiffuse, texcoord).r < 0.5)
+        if (texture2D(tInput, texcoord).r < 0.5)
         {
-            gl_FragColor = sum*sum*0.009 + texture2D(tDiffuse, texcoord);
+            gl_FragColor = sum*sum*0.009 + texture2D(tInput, texcoord);
         }
         else
         {
-            gl_FragColor = sum*sum*0.0075 + texture2D(tDiffuse, texcoord);
+            gl_FragColor = sum*sum*0.0075 + texture2D(tInput, texcoord);
         }
     }
 }

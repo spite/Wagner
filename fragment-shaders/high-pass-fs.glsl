@@ -1,6 +1,6 @@
 // from: http://www.ozone3d.net/smf/index.php?topic=68.0
 
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 
 //uniform float kernel[9];
@@ -46,7 +46,7 @@ void main(void)
 
    for( int i=0; i<9; i++ )
    {
-    vec4 tmp = texture2D(tDiffuse, vUv + offset[i]);
+    vec4 tmp = texture2D(tInput, vUv + offset[i]);
     sum += tmp * kernel[i];
     sum.a = 1.0;
    }

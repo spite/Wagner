@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 varying vec2 vUv;
 
@@ -43,12 +43,12 @@ void main(void)
 	vec4 sum = vec4(0.0);
 	//note: sample positive half-circle
 	for( int i=0;i<NUM_SAMPLES2;++i )
-		sum += texture2D( tDiffuse, vec2(uv.x, uv.y)+ofs[i], MIPBIAS );
+		sum += texture2D( tInput, vec2(uv.x, uv.y)+ofs[i], MIPBIAS );
 
 	//note: sample negative half-circle
 	for( int i=0;i<NUM_SAMPLES2;++i )
-		sum += texture2D( tDiffuse, vec2(uv.x, uv.y)-ofs[i], MIPBIAS );
+		sum += texture2D( tInput, vec2(uv.x, uv.y)-ofs[i], MIPBIAS );
 
 	gl_FragColor.rgb = sum.rgb / NUM_SAMPLES_F;
-	gl_FragColor.a = texture2D( tDiffuse, vUv ).a;
+	gl_FragColor.a = texture2D( tInput, vUv ).a;
 }

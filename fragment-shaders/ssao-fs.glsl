@@ -1,6 +1,6 @@
 varying vec2 vUv;
 uniform sampler2D tDepth;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 uniform float isPacked;
 uniform float onlyOcclusion;
@@ -68,7 +68,7 @@ void main() {
 	if( onlyOcclusion == 1. ) {
 		gl_FragColor = vec4( vec3( occlusion ), 1. );
 	} else {
-		vec3 color = texture2D( tDiffuse, vUv ).rgb;
+		vec3 color = texture2D( tInput, vUv ).rgb;
 		color = mix( vec3( 0. ), color, occlusion );
 		gl_FragColor = vec4( color, 1. );
 	}

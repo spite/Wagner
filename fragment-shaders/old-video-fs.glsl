@@ -5,7 +5,7 @@
 
 #define FREQUENCY 15.0
 
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 uniform float time;
 
@@ -68,7 +68,7 @@ void main(void)
 	vec2 suv = uv + 0.002 * vec2( rand(t), rand(t + 23.0));
 	
 	// Get the image
-	vec3 image = texture2D( tDiffuse, vec2(suv.x, suv.y) ).xyz;
+	vec3 image = texture2D( tInput, vec2(suv.x, suv.y) ).xyz;
 	
 	#ifdef BLACK_AND_WHITE
 	// Pass it to B/W

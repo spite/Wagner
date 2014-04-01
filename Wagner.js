@@ -31,11 +31,15 @@ WAGNER.Composer = function( renderer, settings ) {
 	this.scene.add( this.quad );
 	this.camera = new THREE.OrthographicCamera( 1, 1, 1, 1, -10000, 10000 );
 
-	this.front = new THREE.WebGLRenderTarget( 1, 1, { 
-		minFilter: THREE.LinearFilter, 
-		magFilter: THREE.LinearFilter, 
-		format: this.useRGBA?THREE.RGBAFormat:THREE.RGBFormat
-	} );
+	this.front = new THREE.WebGLRenderTarget(1, 1, {
+		minFilter: this.settings.minFilter !== undefined ? this.settings.minFilter : THREE.LinearFilter,
+		magFilter: this.settings.magFilter !== undefined ? this.settings.magFilter : THREE.LinearFilter,
+		wrapS: this.settings.wrapS !== undefined ? this.settings.wrapS : THREE.ClampToEdgeWrapping,
+		wrapT: this.settings.wrapT !== undefined ? this.settings.wrapT : THREE.ClampToEdgeWrapping,
+		format: this.useRGBA ? THREE.RGBAFormat : THREE.RGBFormat,
+		type: this.settings.type !== undefined ? this.settings.type : THREE.UnsignedByteType,
+		stencilBuffer: this.settings.stencilBuffer !== undefined ? this.settings.stencilBuffer : true
+	});
 	
 	this.back = this.front.clone();
 
@@ -88,7 +92,7 @@ WAGNER.Composer.prototype.toScreen = function() {
 
 	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
-		this.quad.material.uniforms.tDiffuse.value = this.read;
+		this.quad.material.uniforms.tInput.value = this.read;
 		this.quad.material.uniforms.resolution.value.set( this.width, this.height );
 		this.renderer.render( this.scene, this.camera );
 	}
@@ -99,7 +103,7 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 
 	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
-		this.quad.material.uniforms.tDiffuse.value = this.read;
+		this.quad.material.uniforms.tInput.value = this.read;
 		this.renderer.render( this.scene, this.camera, t, true );
 	}
 
@@ -119,7 +123,7 @@ WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 		return;
 	}
 
-	this.quad.material.uniforms.tDiffuse.value = this.read;
+	if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
 	for( var j in uniforms ) {
 		this.quad.material.uniforms[ j ].value = uniforms[ j ];
 	}
@@ -144,7 +148,7 @@ WAGNER.Composer.prototype.setSource = function( src ) {
 
 	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
-		this.quad.material.uniforms.tDiffuse.value = src;
+		this.quad.material.uniforms.tInput.value = src;
 		this.renderer.render( this.scene, this.camera, this.write, true );
 		this.swapBuffers();
 	}
@@ -162,7 +166,7 @@ WAGNER.Composer.prototype.setSize = function( w, h ) {
 	var rt = this.front.clone();
 	rt.width = w;
 	rt.height = h;
-	if( this.quad.material instanceof WAGNER.Pass ) this.quad.material.uniforms.tDiffuse.value = rt;
+	if( this.quad.material instanceof WAGNER.Pass ) this.quad.material.uniforms.tInput.value = rt;
 	this.front = rt;
 
 	rt = this.back.clone();
@@ -249,7 +253,7 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 	var uniforms = {
 		resolution: { type: 'v2', value: new THREE.Vector2( 1, 1 ), default: true },
 		time: { type: 'f', value: Date.now(), default: true },
-		tDiffuse: { type: 't', value: new THREE.Texture(), default: true }
+		tInput: { type: 't', value: new THREE.Texture(), default: true }
 	};
 
   var uniformType, uniformName, arraySize;
@@ -384,7 +388,7 @@ WAGNER.BlendPass = function() {
 
 	this.params.mode = 1;
 	this.params.opacity = 1;
-	this.params.tDiffuse2 = null;
+	this.params.tInput2 = null;
 
 };
 
@@ -420,7 +424,7 @@ WAGNER.BlendPass.prototype.run = function( c ) {
 
 	this.shader.uniforms.mode.value = this.params.mode;
 	this.shader.uniforms.opacity.value = this.params.opacity;
-	this.shader.uniforms.tDiffuse2.value = this.params.tDiffuse2;
+	this.shader.uniforms.tInput2.value = this.params.tInput2;
 	c.pass( this.shader );
 
 }
@@ -674,12 +678,12 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 
 	if( this.params.useTexture === true ) {
 		this.blendPass.params.mode = WAGNER.BlendMode.Screen;
-		this.blendPass.params.tDiffuse2 = this.params.glowTexture;
+		this.blendPass.params.tInput = this.params.glowTexture;
 		c.pass( this.blendPass );
 	}
 
 	this.blendPass.params.mode = WAGNER.BlendMode.Screen;
-	this.blendPass.params.tDiffuse2 = this.composer.output;
+	this.blendPass.params.tInput2 = this.composer.output;
 	c.pass( this.blendPass );
 
 };
@@ -738,7 +742,7 @@ WAGNER.DirtPass.prototype.run = function( c ) {
 
 	this.blendPass.shader.uniforms.sizeMode.value = 1;
 	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.SoftLight;
-	this.blendPass.shader.uniforms.tDiffuse2.value = this.dirtTexture;
+	this.blendPass.shader.uniforms.tInput2.value = this.dirtTexture;
 	this.blendPass.shader.uniforms.resolution2.value.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
 	this.blendPass.shader.uniforms.aspectRatio.value = c.read.width / c.read.height;
 	this.blendPass.shader.uniforms.aspectRatio2.value = this.dirtTexture.image.width / this.dirtTexture.image.height;
@@ -1032,7 +1036,7 @@ WAGNER.CrossFadePass = function() {
 	WAGNER.log( 'CrossFadePass Pass constructor' );
 	this.loadShader( 'crossfade-fs.glsl' );
 
-	this.params.tDiffuse2 = null;
+	this.params.tInput2 = null;
 	this.params.tFadeMap = null;
 	this.params.amount = 0;
 
@@ -1042,7 +1046,7 @@ WAGNER.CrossFadePass.prototype = Object.create( WAGNER.Pass.prototype );
 
 WAGNER.CrossFadePass.prototype.run = function( c ) {
 
-	this.shader.uniforms.tDiffuse2.value = this.params.tDiffuse2;
+	this.shader.uniforms.tInput2.value = this.params.tInput2;
 	this.shader.uniforms.tFadeMap.value = this.params.tFadeMap;
 	this.shader.uniforms.amount.value = this.params.amount;
 

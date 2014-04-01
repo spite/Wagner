@@ -1,5 +1,5 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 uniform sampler2D cgaMap;
 uniform float pixelDensity;
@@ -16,7 +16,7 @@ void main() {
 	d = ar / amount;
 	float sy = floor( vUv.y / d ) * d;
 
-	vec4 base = texture2D( tDiffuse, vec2( sx, sy ) );
+	vec4 base = texture2D( tInput, vec2( sx, sy ) );
 
 	float lum = .2126 * base.r + .7152 * base.g + .0722 * base.b;
 	float o = floor( 6. * lum );

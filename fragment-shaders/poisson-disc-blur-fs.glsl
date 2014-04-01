@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 varying vec2 vUv;
 
@@ -41,7 +41,7 @@ void main(void)
 		vec2 ofs = fTaps_Poisson[i]; ofs = vec2(dot(ofs,basis.xz),dot(ofs,basis.yw) );
 		//vec2 ofs = rot2d( fTaps_Poisson[i], rnd );
 		vec2 texcoord = uv + max_siz * ofs / resolution.xy;
-		sum += texture2D(tDiffuse, texcoord, -10.0);
+		sum += texture2D(tInput, texcoord, -10.0);
 	}
 	gl_FragColor = sum / vec4(NUM_TAPS);
 }

@@ -1,5 +1,5 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform sampler2D tBias;
 uniform vec2 delta;
 uniform float invertBiasMap;
@@ -22,7 +22,7 @@ void main() {
 
 	float f = sampleBias( vUv );
 //	if( invertBiasMap == 1. ) f = 1. - f;
-	vec4 o = texture2D( tDiffuse,vUv );
+	vec4 o = texture2D( tInput,vUv );
 	vec4 color=vec4(0.0);
 	float total=0.0;
 	vec2 tDelta = f * delta;
@@ -30,7 +30,7 @@ void main() {
 	for(float t=-30.0;t<=30.0;t++){
 		float percent=(t+offset-0.5)/30.0;
 		float weight=1.0-abs(percent);
-		vec4 sample=texture2D(tDiffuse,vUv+tDelta*percent);
+		vec4 sample=texture2D(tInput,vUv+tDelta*percent);
 		sample.rgb*=sample.a;
 		color+=sample*weight;
 		total+=weight;

@@ -1,6 +1,6 @@
 varying vec2 vUv;
 uniform vec2 resolution;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform sampler2D tAscii;
 const vec2 fontSize = vec2(8.0,16.0);
 
@@ -23,7 +23,7 @@ void main(void) {
 	for (float x=0.0;x<fontSize.x;x++){
 		for (float y=0.0;y<fontSize.y;y++){
 			vec2 offset = vec2(x,y);
-			sum += texture2D(tDiffuse,uvClamped+(offset*invViewport));
+			sum += texture2D(tInput,uvClamped+(offset*invViewport));
 		}
 	}
 	vec4 avarage = sum / vec4(fontSize.x*fontSize.y);

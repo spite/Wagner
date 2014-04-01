@@ -1,7 +1,7 @@
 // Based on http://coding-experiments.blogspot.sg/2011/01/toon-pixel-shader.html
 
 uniform vec3 resolution;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 varying vec2 vUv;
 
 #define HueLevCount 6
@@ -129,7 +129,7 @@ float avg_intensity(vec4 pix) {
 }
  
 vec4 get_pixel(vec2 coords, float dx, float dy) {
- return texture2D(tDiffuse,coords + vec2(dx, dy));
+ return texture2D(tInput,coords + vec2(dx, dy));
 }
  
 // returns pixel color
@@ -185,7 +185,7 @@ void main(void)
 	ValLevels[2] = 0.6;
 	ValLevels[3] = 1.0; 
  
-    vec4 colorOrg = texture2D( tDiffuse, vUv );
+    vec4 colorOrg = texture2D( tInput, vUv );
     vec3 vHSV =  RGBtoHSV(colorOrg.r,colorOrg.g,colorOrg.b);
     vHSV.x = nearestLevel(vHSV.x, 0);
     vHSV.y = nearestLevel(vHSV.y, 1);

@@ -1,10 +1,10 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform float amount;
 varying vec2 vUv;
 
 void main() {
 	
-	vec4 color = texture2D(tDiffuse, vUv);
+	vec4 color = texture2D(tInput, vUv);
 	float r = color.r;
 	float g = color.g;
 	float b = color.b;

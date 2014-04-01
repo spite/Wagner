@@ -1,6 +1,6 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
-uniform sampler2D tDiffuse2;
+uniform sampler2D tInput;
+uniform sampler2D tInput2;
 uniform vec2 resolution;
 uniform vec2 resolution2;
 uniform float aspectRatio;
@@ -69,8 +69,8 @@ void main() {
 			
 	}
 
-	vec4 base = texture2D( tDiffuse, vUv );
-	vec4 blend = texture2D( tDiffuse2, vUv2 );
+	vec4 base = texture2D( tInput, vUv );
+	vec4 blend = texture2D( tInput2, vUv2 );
 
 	if( mode == 1 ) { // normal
 

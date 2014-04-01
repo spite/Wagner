@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 center;
 uniform float strength;
 uniform vec2 resolution;
@@ -18,7 +18,7 @@ void main() {
 	for (float t = 0.0; t <= 40.0; t++) {
 		float percent = (t + offset) / 40.0;
 		float weight = 4.0 * (percent - percent * percent);
-		vec4 sample = texture2D(tDiffuse, vUv + toCenter * percent / resolution);
+		vec4 sample = texture2D(tInput, vUv + toCenter * percent / resolution);
 
 		sample.rgb *= strength;
 		/* switch to pre-multiplied alpha to correctly blur transparent images */
@@ -28,7 +28,7 @@ void main() {
 		total += weight;
 	}
 
-	gl_FragColor = texture2D( tDiffuse, vUv ) + color / total;
+	gl_FragColor = texture2D( tInput, vUv ) + color / total;
 
 	/* switch back from pre-multiplied alpha */
 	gl_FragColor.rgb /= gl_FragColor.a + 0.00001;

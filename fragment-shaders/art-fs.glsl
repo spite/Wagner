@@ -1,4 +1,4 @@
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 varying vec2 vUv;
 float level( in float value, in float min, in float max ) {
@@ -9,7 +9,7 @@ float gamma( in float value, in float g ) {
 }
 void main(void) {
 	
-	vec4 color = texture2D( tDiffuse, vUv );
+	vec4 color = texture2D( tInput, vUv );
 	float r = color.r;
 	float g = color.g;
 	float b = color.b;

@@ -1,5 +1,5 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
+uniform sampler2D tInput;
 uniform vec2 resolution;
 uniform float pixelSize;
 
@@ -18,7 +18,7 @@ void main(void) {
 
 	p.x -= dx;
 	p.y -= dy;
-	vec3 col = texture2D(tDiffuse, p).rgb;
+	vec3 col = texture2D(tInput, p).rgb;
 	vec3 luma = vec3( .299, 0.587, 0.114 );
 	float bright = dot( col.rgb, luma );
 	
