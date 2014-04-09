@@ -35,9 +35,10 @@
 
 <script src="js/three.min.js"></script>
 <!--<script src="js/OculusRiftEffect.js"></script>-->
-<script src="../rStats/src/rStats.js" ></script>
-<!--<script src="http://spite.github.io/rstats/rStats.js" ></script>-->
+<!--<script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>-->
 <script src="Wagner.js"></script>
+<script src="Wagner.base.js"></script>
 <script src="Wagner.experimental.js"></script>
 <script src="ShaderLoader.js"></script>
 <script src="js/debugTools.js"></script>
@@ -47,7 +48,7 @@
 'use strict'
 
 var composer;
-
+/*
 var rS = new rStats( {
 	CSSPath: 'http://spite.github.io/rstats/',
 	values: {
@@ -58,7 +59,7 @@ var rS = new rStats( {
 	groups: [
 		{ caption: 'Frame', values: [ 'frame', 'raf', 'fps' ] }
 	]
-} );
+} );*/
 
 var links = document.querySelectorAll( 'a[rel=external]' );
 for( var j = 0; j < links.length; j++ ) {
@@ -73,6 +74,8 @@ var container, renderer, scene, camera, mesh, torus, material, fov = 70;
 var model, quad, oculusEffect;
 var light;
 
+var composerSim;
+
 var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
 	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, sobelEdgeDetectionPass,
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
@@ -82,6 +85,8 @@ var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, 
 	ledPass, halftonePass, halftoneCMYKPass;
 
 var draganPass, crossHatchingPass, ssaoPass;
+
+var particles, particleMaterial;
 
 var depthTexture, normalTexture, colorTexture, uvTexture, scaledTexture, glowTexture;
 var depthMaterial;// = new THREE.MeshDepthMaterial();
@@ -248,7 +253,7 @@ function init() {
 	light.shadowCameraFar = 2500;
 	light.shadowCameraFov = 90;
 
-	light.shadowCameraVisible = true;
+	//light.shadowCameraVisible = true;
 
 	light.shadowBias = 0.0001;
 	light.shadowDarkness = 0.5;
@@ -304,11 +309,66 @@ function init() {
 	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	//draganPass = new WAGNER.DraganPass();
 
+	/*var w = 2048, h = 2048;
+	composerSim = new WAGNER.SimComposer( renderer, { width: w, height: h, shader: 'particles-snow-fs.glsl' } );
+	var geometry = new THREE.Geometry();
+
+	for ( var i = 0, l = w * h; i < l; i ++ ) {
+
+		var vertex = new THREE.Vector3();
+		vertex.x = 1000 * ( .5 - Math.random() );
+		vertex.y = 1000 * ( .5 - Math.random() );
+		vertex.z = 1000 * ( .5 - Math.random() );
+		geometry.vertices.push( vertex );
+
+	}
+
+	particleMaterial = new THREE.MeshBasicMaterial();
+
+	particles = new THREE.ParticleSystem( geometry, particleMaterial );
+	scene.add( particles );
+
+	var sL = new ShaderLoader()
+	sL.add( 'particles-vs', 'particles-vs.glsl' );
+	sL.add( 'particles-fs', 'particles-fs.glsl' );
+	sL.load();
+	sL.onLoaded( function() {
+		particleMaterial = new THREE.ShaderMaterial( {
+			uniforms: {
+				map: { type: "t", value: composerSim.composer.output },
+				width: { type: "f", value: w },
+				height: { type: "f", value: h },
+
+				pointColor: { type: "v4", value: new THREE.Vector4( 0.25, 0.50, 1.0, 0.25 ) },
+				pointSize: { type: "f", value: 8 },
+				flakeMap: { type: "t", value: THREE.ImageUtils.loadTexture( 'snowflake.png' ) },
+				influence: { type: "f", value: 0 },
+				time: { type: 'f', value: 0 }
+			},
+			vertexShader: this.get( 'particles-vs' ),
+			fragmentShader: this.get( 'particles-fs' ),
+			shading: THREE.SmoothShading,
+			blending: THREE.NormalBlending,
+			transparent: true,
+			depthWrite: false,
+			depthTest: false
+		} );
+		particles.material = particleMaterial;
+	} );
+
+	mesh = new THREE.Mesh(
+		new THREE.CubeGeometry( 100, 100, 100 ),
+		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'assets/snapshot.jpg' ) } ) 
+	);
+	scene.add( mesh );*/
+
 	onWindowResize();
 
 	render();
 	
 }
+
+var tTexture;
 
 function onWindowResize() {
 
@@ -326,6 +386,7 @@ function onWindowResize() {
 	scaledTexture = WAGNER.Pass.prototype.getOfflineTexture( 512, 512, true )
 	glowTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, false );
 
+	tTexture = WAGNER.Pass.prototype.getOfflineTexture( 100, 100, false );
 }
 
 function onMouseWheel( event ) {
@@ -364,14 +425,15 @@ function onDocumentMouseMove( e ) {
 }
 
 var startTime = Date.now();
+var copy = true;
 
 function render() {
 	
 	var t = .001 * Date.now();
 
-	rS( 'frame' ).start();
+	/*rS( 'frame' ).start();
     rS( 'rAF' ).tick();
-    rS( 'FPS' ).frame();
+    rS( 'FPS' ).frame();*/
 
 	light.position.set( 0, 3000 * Math.cos( t ), 2000 * Math.sin( t ) );
 
@@ -388,9 +450,9 @@ function render() {
 	renderer.autoClearColor = true;
 	composer.reset();
 
-	//composer.render( scene, camera );
+	composer.render( scene, camera );
 
-	scene.overrideMaterial = depthMaterial;
+	/*scene.overrideMaterial = depthMaterial;
 	composer.render( scene, camera, null, depthTexture );
 
 	scene.overrideMaterial = null;
@@ -410,11 +472,8 @@ function render() {
 
 	rgbSplitPass.params.delta.set( 10, 0 );
 	composer.pass( rgbSplitPass );
-
-	multiPassBloomPass.params.applyZoomBlur = true;
-	multiPassBloomPass.params.blurAmount = 10;
-	composer.pass( multiPassBloomPass );
-
+*/
+/*
 	//composer.setSource( depthTexture );
 
 	/*scene.overrideMaterial = uvMaterial;
@@ -434,21 +493,26 @@ function render() {
 	composer.render( scene, camera );
 	composer.toTexture( uvTexture );*/
 
-/*	model.material = glowMaterial;//modelMaterial;
-	composer.render( scene, camera );
-	composer.toTexture( glowTexture );
+	scene.overrideMaterial = glowMaterial;//modelMaterial;
+	composer.render( scene, camera, null, glowTexture );
+	//composer.toTexture( glowTexture );
 
-	model.material = modelMaterial;
-	composer.render( scene, camera );*/
+	scene.overrideMaterial = null;
+	composer.render( scene, camera );
+
+	multiPassBloomPass.params.useTexture = false;
+	multiPassBloomPass.params.glowTexture = glowTexture;
+	multiPassBloomPass.params.applyZoomBlur = true;
+	multiPassBloomPass.params.blurAmount = 10;
+	multiPassBloomPass.params.zoomBlurStrength = .5;
+	composer.pass( multiPassBloomPass );
+
 //	composer.pass( fxaaPass );
 	
 //	composer.pass( sobelEdgeDetectionPass );
 //	composer.toTexture( scaledTexture );
 
 //	composer.pass( invertPass );
-//	zoomBlurPass.params.center.set( .5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
-//	zoomBlurPass.params.strength = .5 + .4 * Math.sin( t );
-//	composer.pass( zoomBlurPass );
 
 //	composer.pass( multiPassBloomPass );
 //	composer.pass( denoisePass );
@@ -489,7 +553,14 @@ function render() {
 //	composer.pass( barrelBlurPass );
 //	composer.pass( sobelEdgeDetectionPass );
 //	composer.pass( pixelatePass )
-//	composer.pass( rgbSplitPass )
+
+	rgbSplitPass.params.delta.set( 40, 0 );
+//	composer.pass( rgbSplitPass );
+
+	zoomBlurPass.params.center.set( .5 * window.innerWidth, .5 * window.innerHeight );//.5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
+	zoomBlurPass.params.strength = .1;//.5 + .4 * Math.sin( t );
+//	composer.pass( zoomBlurPass );
+
 // 	composer.pass( zoomBlurPass );
 //	composer.pass( poissonDiscBlur );
 //	composer.pass( guidedFullBoxBlurPass );
@@ -520,15 +591,29 @@ function render() {
 //	composer.pass( draganPass );
 //	composer.pass( asciiPass );
 	
+	/*composerSim.update();
+	//composer.setSource( composerSim.composer.output );
+	if( particleMaterial.uniforms && particleMaterial.uniforms.map && particleMaterial.uniforms.time ) {
+		particleMaterial.uniforms.map.value = composerSim.composer.read;
+		particleMaterial.uniforms.time.value = t - startTime;
+	}
+	if( copy ) {
+		composerSim.composer.toTexture( tTexture );
+		mesh.material.map = tTexture;//THREE.ImageUtils.loadTexture( 'assets/hatching/hatch_1.jpg' );//composer.output;
+		copy = false;
+	}
+	composer.render( scene, camera );*/
+
 	composer.toScreen();
 
+	//composerSim.composer.toScreen();
 	//renderer.autoClearColor = false;
 	//renderer.render( scene, camera );
 
 }
 
-    rS( 'frame' ).end();
-    rS().update();
+    //rS( 'frame' ).end();
+    //rS().update();
 
 	requestAnimationFrame( render );
 	startTime = t;
