@@ -287,7 +287,6 @@ function init() {
 	guidedFullBoxBlurPass = new WAGNER.GuidedFullBoxBlurPass();
 	pixelatePass = new WAGNER.PixelatePass();
 	rgbSplitPass = new WAGNER.RGBSplitPass();
-	artPass = new WAGNER.ArtPass();
 	chromaticAberrationPass = new WAGNER.ChromaticAberrationPass();
 	barrelBlurPass = new WAGNER.BarrelBlurPass();
 	oldVideoPass = new WAGNER.OldVideoPass();
@@ -308,7 +307,8 @@ function init() {
 	//ssaoPass = new WAGNER.MultiPassSSAOPass();//SSAOPass();
 	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	//draganPass = new WAGNER.DraganPass();
-
+	//artPass = new WAGNER.ArtPass();
+	
 	/*var w = 2048, h = 2048;
 	composerSim = new WAGNER.SimComposer( renderer, { width: w, height: h, shader: 'particles-snow-fs.glsl' } );
 	var geometry = new THREE.Geometry();
