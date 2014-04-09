@@ -21,7 +21,7 @@ float sampleBias( vec2 uv ) {
 void main() {
 
 	float f = sampleBias( vUv );
-//	if( invertBiasMap == 1. ) f = 1. - f;
+	if( invertBiasMap == 1. ) f = 1. - f;
 	vec4 o = texture2D( tInput,vUv );
 	vec4 color=vec4(0.0);
 	float total=0.0;
