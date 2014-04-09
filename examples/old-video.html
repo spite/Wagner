@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Wagner - Minefield!</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #ffffff;
+				font-family: 'roboto condensed', tahoma;
+				font-size:13px;
+				text-align: left;
+				font-weight: 100;
+				background-color: #111;
+				sbackground-image: url( escheresque_ste.png );
+				margin: 0px;
+				overflow: hidden;
+			}
+			#container canvas{ width: 100%; height: 100%;}
+			#fullscreenBtn{ position: absolute; left: 10px; top: 60px; color :white; border: 1px solid white; border-radius: 4px; padding: 10px 20px; background-color: black; text-decoration: none;}
+			#fullscreenBtn:hover{ color: black; background-color: white;}
+			#about{ position: absolute; left: 10px; top: 10px; background-color: #000; padding: 10px;}
+			a{ color: #b70000;}
+		</style>
+		<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<a href="#" id="fullscreenBtn" >Go fullscreen</a>
+		<div id="about" ><b>Wagner</b> Old Video Pass</div>
+
+<script src="../js/three.min.js"></script>
+<!--<script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>-->
+<script src="../Wagner.js"></script>
+<script src="../Wagner.base.js"></script>
+<script src="../Wagner.experimental.js"></script>
+<script src="../ShaderLoader.js"></script>
+<script src="../js/debugTools.js"></script>
+
+<script src="main.js"></script>
+
+<script>
+
+WAGNER.vertexShadersPath = '../vertex-shaders';
+WAGNER.fragmentShadersPath = '../fragment-shaders';
+WAGNER.assetsPath = '../assets/';
+
+var oldVideoPass;
+
+function initPass() {
+
+	createTeapot();
+
+	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
+	oldVideoPass = new WAGNER.OldVideoPass();
+	
+}
+
+function resizePass() {
+
+	composer.setSize( renderer.domElement.width, renderer.domElement.height );
+
+}
+
+function renderPass() {
+		
+	composer.reset();
+	composer.render( scene, camera );
+	composer.pass( oldVideoPass );
+	composer.toScreen();
+	
+}
+
+</script>
+		
+	</body>
+</html>
