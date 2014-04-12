@@ -39,6 +39,7 @@
 <script src="../ShaderLoader.js"></script>
 <script src="../js/debugTools.js"></script>
 
+<script src="DAT.GUI.min.js"></script>
 <script src="main.js"></script>
 
 <script>
@@ -55,7 +56,17 @@ function initPass() {
 
 	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 	ledPass = new WAGNER.LEDPass();
-	
+
+	gui = new DAT.GUI();
+
+	gui.add( ledPass.params, 'pixelSize' ).min( 0 ).max( 100 );
+	gui.add( ledPass.params, 'tolerance' ).min( 0 ).max( 1 );
+	gui.add( ledPass.params, 'pixelRadius' ).min( 0 ).max( 1 );
+	gui.add( ledPass.params, 'luminanceSteps' ).min( 0 ).max( 255 );
+	gui.add( ledPass.params, 'luminanceBoost' ).min( 0 ).max( 1 );
+	gui.add( ledPass.params, 'colorBoost' ).min( 0 ).max( 1 );
+	gui.open();
+
 }
 
 function resizePass() {

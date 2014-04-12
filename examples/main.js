@@ -116,9 +116,11 @@ var modelMaterial = new THREE.MeshPhongMaterial( {
 
 function createTeapot() {
 
+	var sphere = new THREE.Mesh( new THREE.IcosahedronGeometry( 2000, 4 ), new THREE.MeshNormalMaterial( { side: THREE.BackSide } ) );
+	scene.add( sphere );
+
 	var loader = new THREE.JSONLoader();
 	loader.load( '../assets/models/teapot.js', function( data ) { 
-		data.computeCentroids();
 		data.computeFaceNormals();
 		data.computeVertexNormals();
 		THREE.GeometryUtils.center( data );
@@ -141,7 +143,6 @@ function createLeePerry() {
 
 	var loader = new THREE.JSONLoader();
 	loader.load( '../assets/models/LeePerrySmith.js', function( data ) { 
-		data.computeCentroids();
 		data.computeFaceNormals();
 		data.computeVertexNormals();
 		THREE.GeometryUtils.center( data );
