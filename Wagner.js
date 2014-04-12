@@ -8,8 +8,8 @@ WAGNER.vertexShadersPath = './vertex-shaders';
 WAGNER.fragmentShadersPath = './fragment-shaders';
 WAGNER.assetsPath = './assets';
 
-WAGNER.log = function( msg ) {
-	console.log( msg );
+WAGNER.log = function() {
+	console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
 };
 
 WAGNER.Composer = function( renderer, settings ) {
@@ -214,6 +214,8 @@ WAGNER.loadShader = function( file, callback ) {
 
 WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
+	WAGNER.log( 'Processing Shader | Performing uniform Reflection...' );
+
 	var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi; 
 	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
 
@@ -285,6 +287,8 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		};
 	}
 
+	WAGNER.log( 'Uniform reflection completed. Compiling...' );
+
 	var shader = new THREE.ShaderMaterial( {
 		uniforms: uniforms,
 		vertexShader: vertexShaderCode,
@@ -294,6 +298,8 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		depthTest: false,
 		transparent: true
 	} );
+
+	WAGNER.log( 'Compiled' );
 
 	return shader;
 
@@ -305,6 +311,7 @@ WAGNER.Pass = function() {
 	this.shader = null;
 	this.loaded = null;
 	this.params = {};
+	this.isSim = false;
 
 };
 
