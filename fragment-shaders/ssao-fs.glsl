@@ -29,7 +29,7 @@ void checkDepth( vec2 uv ) { // from iq's tutorial
 
 void main() {
 	
-	float r = 16.;
+	float r = 4.;
 	float xi = r / resolution.x;
 	float yi = r / resolution.y;
 
