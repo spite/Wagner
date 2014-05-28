@@ -7,6 +7,10 @@ WAGNER.BlendPass = function() {
 	this.params.mode = 1;
 	this.params.opacity = 1;
 	this.params.tInput2 = null;
+	this.params.resolution2 = new THREE.Vector2();
+	this.params.sizeMode = 1
+	this.params.aspectRatio = 1;
+	this.params.aspectRatio2 = 1;
 
 };
 
@@ -43,7 +47,10 @@ WAGNER.BlendPass.prototype.run = function( c ) {
 	this.shader.uniforms.mode.value = this.params.mode;
 	this.shader.uniforms.opacity.value = this.params.opacity;
 	this.shader.uniforms.tInput2.value = this.params.tInput2;
-	c.pass( this.shader );
+	this.shader.uniforms.sizeMode.value = this.params.sizeMode;
+	this.shader.uniforms.aspectRatio.value = this.params.aspectRatio;
+	this.shader.uniforms.aspectRatio2.value = this.params.aspectRatio2;
+		c.pass( this.shader );
 
 }
 
@@ -360,12 +367,12 @@ WAGNER.DirtPass.prototype.isLoaded = function() {
 
 WAGNER.DirtPass.prototype.run = function( c ) {
 
-	this.blendPass.shader.uniforms.sizeMode.value = 1;
-	this.blendPass.shader.uniforms.mode.value = WAGNER.BlendMode.SoftLight;
-	this.blendPass.shader.uniforms.tInput2.value = this.dirtTexture;
-	this.blendPass.shader.uniforms.resolution2.value.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
-	this.blendPass.shader.uniforms.aspectRatio.value = c.read.width / c.read.height;
-	this.blendPass.shader.uniforms.aspectRatio2.value = this.dirtTexture.image.width / this.dirtTexture.image.height;
+	this.blendPass.params.sizeMode = 1;
+	this.blendPass.params.mode = WAGNER.BlendMode.SoftLight;
+	this.blendPass.params.tInput2 = this.dirtTexture;
+	this.blendPass.params.resolution2.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
+	this.blendPass.params.aspectRatio = c.read.width / c.read.height;
+	this.blendPass.params.aspectRatio2 = this.dirtTexture.image.width / this.dirtTexture.image.height;
 	c.pass( this.blendPass );
 
 };
@@ -647,6 +654,28 @@ WAGNER.HalftonePass = function() {
 
 WAGNER.HalftonePass.prototype = Object.create( WAGNER.Pass.prototype );
 
+WAGNER.Halftone2Pass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'Halftone2Pass Pass constructor' );
+	this.loadShader( 'halftone2-fs.glsl' );
+
+	this.params.amount = 128;
+	this.params.smoothness = .25;
+
+};
+
+WAGNER.Halftone2Pass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.Halftone2Pass.prototype.run = function( c ) {
+
+	this.shader.uniforms.amount.value = this.params.amount;
+	this.shader.uniforms.smoothness.value = this.params.smoothness;
+
+	c.pass( this.shader );
+
+}
+
 WAGNER.HalftoneCMYKPass = function() {
 
 	WAGNER.Pass.call( this );
@@ -717,6 +746,30 @@ WAGNER.SSAOPass.prototype.run = function( c ) {
 	this.shader.uniforms.tDepth.value = this.params.texture;
 	this.shader.uniforms.isPacked.value = this.params.isPacked;
 	this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
+	c.pass( this.shader );
+
+}
+
+WAGNER.DirectionalBlurPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'Directional Blur Pass constructor' );
+	this.loadShader( 'guided-directional-blur-fs.glsl', function( fs ) {
+		
+	} );
+
+	this.params.tBias = null;
+	this.params.delta = .1;
+
+}
+
+WAGNER.DirectionalBlurPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.DirectionalBlurPass.prototype.run = function( c ) {
+
+	this.shader.uniforms.tBias.value = this.params.tBias;
+	this.shader.uniforms.delta.value = this.params.delta;
+
 	c.pass( this.shader );
 
 }
