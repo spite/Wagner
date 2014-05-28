@@ -387,5 +387,20 @@ WAGNER.CopyPass = function() {
 
 WAGNER.CopyPass.prototype = Object.create( WAGNER.Pass.prototype );
 
+WAGNER.GenericPass = function( fragmentShaderSource, c ) {
+
+	WAGNER.Pass.call( this );
+	var self = this;
+	WAGNER.loadShader( WAGNER.vertexShadersPath + '/orto-vs.glsl', function( vs ) {
+		WAGNER.loadShader( fragmentShaderSource, function( fs ) {
+			self.shader = WAGNER.processShader( vs, fs );
+			if( c ) c.apply( self );
+		} );
+	} );
+
+}
+
+WAGNER.GenericPass.prototype = Object.create( WAGNER.Pass.prototype );
+
 window.WAGNER = WAGNER;
 })();
