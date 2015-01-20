@@ -60,8 +60,8 @@ function initPass() {
 
 	gui = new DAT.GUI();
 
-	gui.add( blurPass.params.delta, 'x' ).min(0).max(.1);
-	gui.add( blurPass.params.delta, 'y' ).min(0).max(.1);
+	gui.add( blurPass.params.delta, 'x' ).min(1).max(100);
+	gui.add( blurPass.params.delta, 'y' ).min(1).max(100);
 	gui.open();
 
 }

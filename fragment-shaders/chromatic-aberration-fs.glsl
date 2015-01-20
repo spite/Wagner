@@ -45,7 +45,7 @@ void main()
 		float t = float(i) * reci_num_iter_f;
 		vec4 w = spectrum_offset( t );
 		sumw += w;
-		sumcol += w * texture2D( tInput, barrelDistortion(uv, max_distort*t ) );
+		sumcol += w * texture2D( tInput, barrelDistortion(uv, .6 * max_distort*t ) );
 	}
 		
 	gl_FragColor = sumcol / sumw;

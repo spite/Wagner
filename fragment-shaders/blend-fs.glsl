@@ -168,6 +168,7 @@ void main() {
 			applyOverlayToChannel( base.a, blend.a )
 		);
 		gl_FragColor = gl_FragColor * opacity + base * ( 1. - opacity );
+	
 		return;
 
 	}

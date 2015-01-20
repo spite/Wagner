@@ -23,7 +23,7 @@ float occlusion = 0.;
 float depth = sampleDepth( vUv );
 
 void checkDepth( vec2 uv ) { // from iq's tutorial
-	float zd = 50.0 * min( depth - sampleDepth( uv ), 0.0 );
+	float zd = 10.0 * min( depth - sampleDepth( uv ), 0.0 );
     occlusion += 1.0 / ( 1.0 + zd * zd );
 }
 
@@ -72,6 +72,5 @@ void main() {
 		color = mix( vec3( 0. ), color, occlusion );
 		gl_FragColor = vec4( color, 1. );
 	}
-
 
 }

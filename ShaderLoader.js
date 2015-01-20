@@ -17,7 +17,7 @@ ShaderLoader.prototype.add = function( id, name ) {
 		content: '',
 		loaded: false
 	}
-	this.queue.push( this.shaders[ id ] );
+	this.queue.push( this.shaders[ id ] );
 
 }
 
@@ -63,7 +63,7 @@ ShaderLoader.prototype.get = function( id ) {
 		};
 	}
 
-	var s = this.shaders[ id ];
+	var s = this.shaders[ id ];
 	if( !s ) {
 		throw new ShaderLoaderGetException( id );
 		return;

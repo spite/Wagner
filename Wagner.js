@@ -9,7 +9,7 @@ WAGNER.fragmentShadersPath = './fragment-shaders';
 WAGNER.assetsPath = './assets';
 
 WAGNER.log = function() {
-	console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
+	//console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
 };
 
 WAGNER.Composer = function( renderer, settings ) {
@@ -109,7 +109,7 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 
 };
 
-WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
+WAGNER.Composer.prototype.pass = function( pass ) {
 
 	if( typeof pass === 'string' ) {
 		this.quad.material = this.passes[ pass ];
@@ -124,9 +124,7 @@ WAGNER.Composer.prototype.pass = function( pass, uniforms ) {
 	}
 
 	if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
-	for( var j in uniforms ) {
-		this.quad.material.uniforms[ j ].value = uniforms[ j ];
-	}
+	
 	this.quad.material.uniforms.resolution.value.set( this.width, this.height );
 	this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
 	this.renderer.render( this.scene, this.camera, this.write, false );
@@ -318,12 +316,11 @@ WAGNER.Pass = function() {
 WAGNER.Pass.prototype.loadShader = function( id, c ) {
 
 	var self = this;
-	WAGNER.loadShader( WAGNER.vertexShadersPath + '/orto-vs.glsl', function( vs ) {
-		WAGNER.loadShader( WAGNER.fragmentShadersPath + '/' + id, function( fs ) {
-			self.shader = WAGNER.processShader( vs, fs );
-			//self.mapUniforms( self.shader.uniforms );
-			if( c ) c.apply( self );
-		} );
+	var vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }';
+	WAGNER.loadShader( WAGNER.fragmentShadersPath + '/' + id, function( fs ) {
+		self.shader = WAGNER.processShader( vs, fs );
+		//self.mapUniforms( self.shader.uniforms );
+		if( c ) c.apply( self );
 	} );
 
 };

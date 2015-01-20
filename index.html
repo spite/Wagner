@@ -91,10 +91,10 @@ var particles, particleMaterial;
 var depthTexture, normalTexture, colorTexture, uvTexture, scaledTexture, glowTexture;
 var depthMaterial;// = new THREE.MeshDepthMaterial();
 var modelMaterial = new THREE.MeshPhongMaterial( { 
-	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324-decal.jpg' ), 
+	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324.jpg' ), 
 	normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
 	normalScale: new THREE.Vector2( .8, -.8 ),
-	shininess: 10
+	shininess: 100
 } );
 var glowMaterial = new THREE.MeshBasicMaterial( {
 	emissive: 0xffffff,
@@ -118,7 +118,7 @@ sL.onLoaded( function() {
 	depthMaterial = new THREE.ShaderMaterial( {
 		uniforms: {
 			mNear: { type: 'f', value: 1 },
-			mFar: { type: 'f', value: 10000 }
+			mFar: { type: 'f', value: 1000 }
 		},
 		vertexShader: this.get( 'depth-vs' ),
 		fragmentShader: this.get( 'depth-fs' ),
@@ -243,7 +243,7 @@ function init() {
 	var ambient = new THREE.AmbientLight( 0x444444 );
 	scene.add( ambient );
 
-	light = new THREE.SpotLight( 0xaaaaaa, 1, 0, Math.PI / 2, 1 );
+	light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 1 );
 	light.position.set( 0, 1500, 1000 );
 	light.target.position.set( 0, 0, 0 );
 
@@ -301,9 +301,13 @@ function init() {
 	asciiPass = new WAGNER.ASCIIPass();
 	ledPass = new WAGNER.LEDPass();
 	halftonePass = new WAGNER.HalftonePass();
-	halftoneCMYKPass = new WAGNER.HalftoneCMYKPass();
+	//halftoneCMYKPass = new WAGNER.HalftoneCMYKPass();
 	ssaoPass = new WAGNER.SSAOPass();
 	
+	multiPassBloomPass.params.blurAmount = 2;
+	guidedFullBoxBlurPass.params.amount = 20;
+	guidedFullBoxBlurPass.params.invertBiasMap = true;
+
 	//ssaoPass = new WAGNER.MultiPassSSAOPass();//SSAOPass();
 	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	//draganPass = new WAGNER.DraganPass();
@@ -435,182 +439,45 @@ function render() {
     rS( 'rAF' ).tick();
     rS( 'FPS' ).frame();*/
 
-	light.position.set( 0, 3000 * Math.cos( t ), 2000 * Math.sin( t ) );
+	//light.position.set( 0, 3000 * Math.cos( t ), 2000 * Math.sin( t ) );
 
     if( model ) {
 	    /*model.rotation.x += .001;
 	    model.rotation.y += .001;
 	    model.rotation.z += .005;*/
-	
-	camera.position.x += ( mouseX - camera.position.x ) * .05;
-	camera.position.y += ( - mouseY - camera.position.y ) * .05;
-	camera.lookAt( scene.position );
+		
+		camera.position.x += ( mouseX - camera.position.x ) * .05;
+		camera.position.y += ( - mouseY - camera.position.y ) * .05;
+		camera.lookAt( scene.position );
 
-	var k = Math.sin( .002 * t ) * .02 + .02;
-	renderer.autoClearColor = true;
-	composer.reset();
+		var k = Math.sin( .002 * t ) * .02 + .02;
+		renderer.autoClearColor = true;
+		composer.reset();
 
-	composer.render( scene, camera );
+		composer.render( scene, camera );
 
-	/*scene.overrideMaterial = depthMaterial;
-	composer.render( scene, camera, null, depthTexture );
+		var k = Math.sin( .002 * t ) * .02 + .02;
+		renderer.autoClearColor = true;
+		composer.reset();
 
-	scene.overrideMaterial = null;
-	composer.render( scene, camera );
+		model.material = depthMaterial;
+		composer.render( scene, camera, null, depthTexture );
 
-	ssaoPass.params.isPacked = false;
-	ssaoPass.params.texture = depthTexture;
-	ssaoPass.params.onlyOcclusion = false;
-	composer.pass( ssaoPass );
+		model.material = modelMaterial;
+		composer.render( scene, camera );
 
-	guidedFullBoxBlurPass.params.invertBiasMap = 1;
-	guidedFullBoxBlurPass.params.amount = 20;
-	guidedFullBoxBlurPass.params.tBias = depthTexture;
-	guidedFullBoxBlurPass.params.from = 1;
-	guidedFullBoxBlurPass.params.to = .7;
-	composer.pass( guidedFullBoxBlurPass );
+		guidedFullBoxBlurPass.params.tBias = depthTexture;
+		
+		composer.pass( multiPassBloomPass );
+		composer.pass( guidedFullBoxBlurPass );
+		composer.pass( dirtPass );
 
-	rgbSplitPass.params.delta.set( 10, 0 );
-	composer.pass( rgbSplitPass );
-*/
-/*
-	//composer.setSource( depthTexture );
+		composer.pass( vignette2Pass );
+		composer.pass( fxaaPass );
 
-	/*scene.overrideMaterial = uvMaterial;
-	composer.render( scene, camera, null, uvTexture );
+		composer.toScreen();
 
-	scene.overrideMaterial = null;
-	composer.render( scene, camera );
-
-	crossHatchingPass.params.texture = uvTexture;
-	composer.pass( crossHatchingPass );*/
-
-	/*model.material = depthMaterial;
-	composer.render( scene, camera );
-	composer.toTexture( depthTexture );
-
-	model.material = uvMaterial;
-	composer.render( scene, camera );
-	composer.toTexture( uvTexture );*/
-
-	scene.overrideMaterial = glowMaterial;//modelMaterial;
-	composer.render( scene, camera, null, glowTexture );
-	//composer.toTexture( glowTexture );
-
-	scene.overrideMaterial = null;
-	composer.render( scene, camera );
-
-	multiPassBloomPass.params.useTexture = false;
-	multiPassBloomPass.params.glowTexture = glowTexture;
-	multiPassBloomPass.params.applyZoomBlur = true;
-	multiPassBloomPass.params.blurAmount = 10;
-	multiPassBloomPass.params.zoomBlurStrength = .5;
-	composer.pass( multiPassBloomPass );
-
-//	composer.pass( fxaaPass );
-	
-//	composer.pass( sobelEdgeDetectionPass );
-//	composer.toTexture( scaledTexture );
-
-//	composer.pass( invertPass );
-
-//	composer.pass( multiPassBloomPass );
-//	composer.pass( denoisePass );
-//	composer.pass( fullBoxBlurPass );
-//	composer.pass( sepiaPass );
-//	composer.pass( noisePass );
-//	composer.pass( vignettePass );
-//	composer.pass( vignette2Pass );
-//	composer.pass( CGAPass );
-	
-	/*if( guidedFullBoxBlurPass.isLoaded() ) {
-		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
 	}
-	composer.pass( guidedFullBoxBlurPass );
-	composer.pass( multiPassBloomPass );
-	composer.pass( dirtPass );*/
-
-	/*if( crossHatchingPass.isLoaded() ) {
-		crossHatchingPass.shader.uniforms.tUV.value = uvTexture;
-	//	composer.pass( crossHatchingPass );
-	}*/
-
-	/*if( SSAOPass.isLoaded() ) {
-		SSAOPass.shader.uniforms.tDepth.value = depthTexture;
-		//composer.pass( SSAOPass );
-	}*/
-
-	if( guidedFullBoxBlurPass.isLoaded() ) {
-		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.isPacked.value = true;
-		guidedFullBoxBlurPass.guidedBoxPass.shader.uniforms.tBias.value = depthTexture;
-	//	composer.pass( guidedFullBoxBlurPass );
-	}
-
-//	composer.pass( artPass );
-//	composer.pass( oldVideoPass );
-//	composer.pass( poissonDiscBlur );
-//	composer.pass( circularBlur );
-//	composer.pass( barrelBlurPass );
-//	composer.pass( sobelEdgeDetectionPass );
-//	composer.pass( pixelatePass )
-
-	rgbSplitPass.params.delta.set( 40, 0 );
-//	composer.pass( rgbSplitPass );
-
-	zoomBlurPass.params.center.set( .5 * window.innerWidth, .5 * window.innerHeight );//.5 + .25 * Math.cos( t ) , .5 + .25 * Math.sin( t ) );
-	zoomBlurPass.params.strength = .1;//.5 + .4 * Math.sin( t );
-//	composer.pass( zoomBlurPass );
-
-// 	composer.pass( zoomBlurPass );
-//	composer.pass( poissonDiscBlur );
-//	composer.pass( guidedFullBoxBlurPass );
-//	composer.pass( multiPassBloomPass );
-//	composer.pass( chromaticAberrationPass );
-//	composer.pass( invertPass );
-//	composer.pass( multiPassBloomPass );
-//	composer.pass( dirtPass );
-//	composer.pass( pixelatePass )
-//	composer.pass( CGAPass );
-//	composer.pass( freiChenEdgeDetectionPass );
-
-	//composer.pass( invertPass );
-	//composer.pass( sepiaPass );
-
-	//renderer.autoClearColor = false;
-	//composer.render( scene, camera, true );
-
-//	composer.pass( pixelatePass )
-//	vignettePass.params.amount = .5 + .4 * Math.sin( t );
-//	composer.pass( vignettePass );
-/*	denoisePass.params.exponent = .5 + .4 * Math.sin( t * 1.1 );
-	denoisePass.params.strength = .5 + .4 * Math.sin( t );
-	composer.pass( denoisePass );
-	noisePass.params.noiseAmount = .5 + .4 * Math.sin( t );*/
-//	composer.pass( noisePass );
-//	composer.pass( toonPass );
-//	composer.pass( draganPass );
-//	composer.pass( asciiPass );
-	
-	/*composerSim.update();
-	//composer.setSource( composerSim.composer.output );
-	if( particleMaterial.uniforms && particleMaterial.uniforms.map && particleMaterial.uniforms.time ) {
-		particleMaterial.uniforms.map.value = composerSim.composer.read;
-		particleMaterial.uniforms.time.value = t - startTime;
-	}
-	if( copy ) {
-		composerSim.composer.toTexture( tTexture );
-		mesh.material.map = tTexture;//THREE.ImageUtils.loadTexture( 'assets/hatching/hatch_1.jpg' );//composer.output;
-		copy = false;
-	}
-	composer.render( scene, camera );*/
-
-	composer.toScreen();
-
-	//composerSim.composer.toScreen();
-	//renderer.autoClearColor = false;
-	//renderer.render( scene, camera );
-
-}
 
     //rS( 'frame' ).end();
     //rS().update();
