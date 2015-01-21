@@ -320,7 +320,7 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 	this.blendPass.params.mode = WAGNER.BlendMode.Screen;
 	this.blendPass.params.tInput2 = this.composer.output;
 	c.pass( this.blendPass );
-	
+
 };
 
 WAGNER.CGAPass = function() {
@@ -378,9 +378,11 @@ WAGNER.DirtPass.prototype.run = function( c ) {
 	this.blendPass.params.sizeMode = 1;
 	this.blendPass.params.mode = WAGNER.BlendMode.SoftLight;
 	this.blendPass.params.tInput2 = this.dirtTexture;
-	this.blendPass.params.resolution2.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
+	if( this.dirtTexture.image ) {
+		this.blendPass.params.resolution2.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
+		this.blendPass.params.aspectRatio2 = this.dirtTexture.image.width / this.dirtTexture.image.height;
+	}
 	this.blendPass.params.aspectRatio = c.read.width / c.read.height;
-	this.blendPass.params.aspectRatio2 = this.dirtTexture.image.width / this.dirtTexture.image.height;
 	c.pass( this.blendPass );
 
 };
