@@ -60,6 +60,7 @@ function init() {
 
 	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setPixelRatio( window.devicePixelRatio );
 
     //oculusEffect = new THREE.OculusRiftEffect(renderer, {worldScale: 100});
     //oculusEffect.setSize( window.innerWidth, window.innerHeight );
