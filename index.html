@@ -34,12 +34,13 @@
 		Made with and for <a href="http://threejs.org/" >three.js</a> | Stats by <a href="http://spite.github.io/rstats/" >rStats</a> | <a href="http://www.twitter.com/thespite">@thespite</a> | <a href="http://www.clicktorelease.com">clicktorelease.com</a></div>
 
 <script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
 <!--<script src="js/OculusRiftEffect.js"></script>-->
 <!--<script src="http://spite.github.io/rstats/rStats.js" ></script>
 <script src="http://spite.github.io/rstats/rStats.extras.js" ></script>-->
 <script src="Wagner.js"></script>
 <script src="Wagner.base.js"></script>
-<script src="Wagner.experimental.js"></script>
+<!--<script src="Wagner.experimental.js"></script>-->
 <script src="ShaderLoader.js"></script>
 <script src="js/debugTools.js"></script>
 
@@ -73,6 +74,7 @@ for( var j = 0; j < links.length; j++ ) {
 var container, renderer, scene, camera, mesh, torus, material, fov = 70;
 var model, quad, oculusEffect;
 var light;
+var controls;
 
 var composerSim;
 
@@ -126,7 +128,7 @@ sL.onLoaded( function() {
 	} );
 } );
 
-var sL = new ShaderLoader()
+/*var sL = new ShaderLoader()
 sL.add( 'uv-vs', 'vertex-shaders/packed-depth-vs.glsl' );
 sL.add( 'uv-fs', 'fragment-shaders/uv-material-fs.glsl' );
 sL.load();
@@ -141,7 +143,7 @@ sL.onLoaded( function() {
 		fragmentShader: this.get( 'uv-fs' ),
 		shading: THREE.SmoothShading
 	} );
-} );
+} );*/
 
 var c = document.body;
 document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( e ) {
@@ -174,17 +176,18 @@ function init() {
 	camera.position.z = 1000;
 	scene.add( camera );
 
+	controls = new THREE.OrbitControls( camera );
+	controls.dampening = .2;
+
 	renderer = new THREE.WebGLRenderer( { antialias: false, alpha: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setPixelRatio( window.devicePixelRatio );
 
     //oculusEffect = new THREE.OculusRiftEffect(renderer, {worldScale: 100});
     //oculusEffect.setSize( window.innerWidth, window.innerHeight );
 
 	container.appendChild( renderer.domElement );
 
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	container.addEventListener( 'mousewheel', onMouseWheel, false );
-	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
 	window.addEventListener( 'resize', onWindowResize, false );
 
 	var useTeapot = false;
@@ -393,41 +396,6 @@ function onWindowResize() {
 	tTexture = WAGNER.Pass.prototype.getOfflineTexture( 100, 100, false );
 }
 
-function onMouseWheel( event ) {
-
-	// WebKit
-
-	if ( event.wheelDeltaY ) {
-
-		fov -= event.wheelDeltaY * 0.05;
-
-	// Opera / Explorer 9
-
-	} else if ( event.wheelDelta ) {
-
-		fov -= event.wheelDelta * 0.05;
-
-	// Firefox
-
-	} else if ( event.detail ) {
-
-		fov += event.detail * 1.0;
-
-	}
-
-	camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
-	
-}
-
-var mouseX = 0, mouseY = 0;
-
-function onDocumentMouseMove( e ) {
-
-	mouseX = 10 * ( .5 * window.innerWidth - e.pageX );
-	mouseY = 10 * ( .5 * window.innerHeight - e.pageY );
-
-}
-
 var startTime = Date.now();
 var copy = true;
 
@@ -445,18 +413,7 @@ function render() {
 	    /*model.rotation.x += .001;
 	    model.rotation.y += .001;
 	    model.rotation.z += .005;*/
-		
-		camera.position.x += ( mouseX - camera.position.x ) * .05;
-		camera.position.y += ( - mouseY - camera.position.y ) * .05;
-		camera.lookAt( scene.position );
-
-		var k = Math.sin( .002 * t ) * .02 + .02;
-		renderer.autoClearColor = true;
-		composer.reset();
-
-		composer.render( scene, camera );
-
-		var k = Math.sin( .002 * t ) * .02 + .02;
+	
 		renderer.autoClearColor = true;
 		composer.reset();
 
