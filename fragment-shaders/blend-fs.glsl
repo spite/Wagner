@@ -9,7 +9,7 @@ uniform int mode;
 uniform int sizeMode;
 uniform float opacity;
 
-vec2 vUv2 = vUv;
+vec2 vUv2;
 
 float applyOverlayToChannel( float base, float blend ) {
 
