@@ -387,13 +387,13 @@ function onWindowResize() {
 	camera.projectionMatrix.makePerspective( fov, w / h, camera.near, camera.far );
 	composer.setSize( w, h );
 	depthTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
-	normalTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
+	/*normalTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h );
 	colorTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
 	uvTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, true );
 	scaledTexture = WAGNER.Pass.prototype.getOfflineTexture( 512, 512, true )
 	glowTexture = WAGNER.Pass.prototype.getOfflineTexture( w, h, false );
 
-	tTexture = WAGNER.Pass.prototype.getOfflineTexture( 100, 100, false );
+	tTexture = WAGNER.Pass.prototype.getOfflineTexture( 100, 100, false );*/
 }
 
 var startTime = Date.now();
