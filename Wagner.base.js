@@ -797,8 +797,9 @@ WAGNER.SSAOPass.prototype = Object.create( WAGNER.Pass.prototype );
 WAGNER.SSAOPass.prototype.run = function( c ) {
 
 	if( !this.composer ) {
+		var s = 4;
 		this.composer = new WAGNER.Composer( c.renderer, { useRGBA: true } );
-		this.composer.setSize( c.width / 2, c.height / 2 );
+		this.composer.setSize( c.width / s, c.height / s );
 	}
 
 	this.composer.reset();
@@ -806,19 +807,50 @@ WAGNER.SSAOPass.prototype.run = function( c ) {
 	this.composer.setSource( c.output );
 
 	this.shader.uniforms.tDepth.value = this.params.texture;
-	this.shader.uniforms.isPacked.value = this.params.isPacked;
+	//this.shader.uniforms.isPacked.value = this.params.isPacked;
 	this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
 	this.composer.pass( this.shader );
 
-	this.blurPass.params.amount = .5;
+	this.blurPass.params.amount = .1;
 	this.composer.pass( this.blurPass );
 
-	this.blendPass.params.mode = WAGNER.BlendMode.Multiply;
-	this.blendPass.params.tInput2 = this.composer.output;
+	if( this.params.onlyOcclusion ) {
+		c.setSource( this.composer.output );
+	} else {		
+		this.blendPass.params.mode = WAGNER.BlendMode.Multiply;
+		this.blendPass.params.tInput2 = this.composer.output;
 
-	c.pass( this.blendPass );
+		c.pass( this.blendPass );
+	}
 
-	//c.setSource( this.composer.output );
+}
+
+WAGNER.SimpleSSAOPass = function() {
+
+	WAGNER.Pass.call( this );
+	WAGNER.log( 'SimpleSSAOPass Pass constructor' );
+	this.loadShader( 'ssao-simple-fs.glsl', function( fs ) {
+	} );
+
+	this.params.texture = null;
+	this.params.onlyOcclusion = 0;
+	this.params.zNear = 1;
+	this.params.zFar = 10000;
+	this.params.strength = 1;
+
+};
+
+WAGNER.SimpleSSAOPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+WAGNER.SimpleSSAOPass.prototype.run = function( c ) {
+
+	this.shader.uniforms.tDepth.value = this.params.texture;
+//	this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
+	this.shader.uniforms.zNear.value = this.params.zNear;
+	this.shader.uniforms.zFar.value = this.params.zFar;
+	this.shader.uniforms.strength.value = this.params.strength;
+
+	c.pass( this.shader );
 
 }
 

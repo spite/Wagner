@@ -21,10 +21,12 @@ float sampleDepth( vec2 uv ) {
 
 float occlusion = 0.;
 float depth = sampleDepth( vUv );
+float ac = 0.;
 
 void checkDepth( vec2 uv ) { // from iq's tutorial
 	float zd = 10.0 * min( depth - sampleDepth( uv ), 0.0 );
-    occlusion += 1.0 / ( 1.0 + zd * zd );
+	ac += zd;
+    occlusion += 1.0 / ( 1. + zd * zd );
 }
 
 void main() {
@@ -63,14 +65,25 @@ void main() {
 	checkDepth( vUv + vec2(   2. * xi, 2. * yi ) );
 
 	occlusion /= 24.;
-	occlusion += .2 * random( vec3( gl_FragCoord.xy, depth ), length( gl_FragCoord ) );
+	occlusion += .02 * random( vec3( gl_FragCoord.xy, depth ), length( gl_FragCoord ) );
 
-	if( onlyOcclusion == 1. ) {
+	/*if( onlyOcclusion == 1. ) {
 		gl_FragColor = vec4( vec3( occlusion ), 1. );
 	} else {
 		vec3 color = texture2D( tInput, vUv ).rgb;
 		color = mix( vec3( 0. ), color, occlusion );
 		gl_FragColor = vec4( color, 1. );
-	}
+	}*/
+
+
+	float inBlack = 0.;
+	float inWhite = 255.;
+	float inGamma = 10.;
+	float outBlack = 0.;
+	float outWhite = 255.;
+
+	//occlusion = ( pow( ( ( occlusion * 255.0) - inBlack) / (inWhite - inBlack), inGamma) * (outWhite - outBlack) + outBlack) / 255.0;
+
+	gl_FragColor = vec4( vec3( occlusion ), 1. );
 
 }
