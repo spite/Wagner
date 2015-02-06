@@ -25,7 +25,7 @@ WAGNER.Composer = function( renderer, settings ) {
 
 	this.scene = new THREE.Scene();
 	this.quad = new THREE.Mesh(
-		new THREE.PlaneGeometry( 1, 1 ),
+		new THREE.PlaneBufferGeometry( 1, 1 ),
 		this.defaultMaterial
 	);
 	this.scene.add( this.quad );
