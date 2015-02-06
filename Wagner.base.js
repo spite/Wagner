@@ -389,8 +389,11 @@ WAGNER.FreiChenEdgeDetectionPass.prototype = Object.create( WAGNER.Pass.prototyp
 
 WAGNER.DirtPass = function() {
 
+	WAGNER.Pass.call( this );
 	this.blendPass = new WAGNER.BlendPass();
 	this.dirtTexture = THREE.ImageUtils.loadTexture( WAGNER.assetsPath + '/textures/dirt8.jpg' );
+
+	this.params.blendMode = WAGNER.BlendMode.SoftLight;
 
 };
 
@@ -408,7 +411,7 @@ WAGNER.DirtPass.prototype.isLoaded = function() {
 WAGNER.DirtPass.prototype.run = function( c ) {
 
 	this.blendPass.params.sizeMode = 1;
-	this.blendPass.params.mode = WAGNER.BlendMode.SoftLight;
+	this.blendPass.params.mode = this.params.blendMode;
 	this.blendPass.params.tInput2 = this.dirtTexture;
 	if( this.dirtTexture.image ) {
 		this.blendPass.params.resolution2.set( this.dirtTexture.image.width, this.dirtTexture.image.height );
