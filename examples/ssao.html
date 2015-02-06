@@ -52,14 +52,16 @@ var ssaoPass;
 var gui;
 var depthTexture;
 
-var depthMaterial = new MeshBasicMaterial();
+var depthMaterial = new THREE.MeshBasicMaterial();
 
 function initPass() {
 
 	createCubes();
+	//createTeapot();
 
 	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 	ssaoPass = new WAGNER.SSAOPass();
+	ssaoPass.params.onlyOcclusion = true;
 
 	gui = new DAT.GUI();
 
@@ -85,6 +87,7 @@ function initPass() {
 		} );
 	} );
 
+	scene.children[ 3 ].material = new THREE.MeshNormalMaterial();
 }
 
 function resizePass() {
@@ -106,6 +109,7 @@ function renderPass() {
 	composer.render( scene, camera );
 
 	composer.pass( ssaoPass );
+
 	composer.toScreen();
 	
 }
