@@ -57,12 +57,13 @@ var glowMaterial = new THREE.MeshBasicMaterial( {
 	map: THREE.ImageUtils.loadTexture( '../assets/textures/1324-glow.jpg' ),
 } );
 
-glowMaterial.map.repeat = new THREE.Vector2( 10, 10 );
+glowMaterial.map.repeat = new THREE.Vector2( 1, 1 );
 glowMaterial.map.wrapS = glowMaterial.map.wrapT = THREE.RepeatWrapping;
 
 function initPass() {
 
-	createTeapot();
+	//createTeapot();
+	createCubes();
 
 	composer = new WAGNER.Composer( renderer, { useRGBA: false } );
 	bloomPass = new WAGNER.MultiPassBloomPass();
@@ -70,7 +71,7 @@ function initPass() {
 
 	gui = new DAT.GUI();
 
-	gui.add( bloomPass.params, 'blurAmount' ).min(0).max(100);
+	gui.add( bloomPass.params, 'blurAmount' ).min(0).max(4);
 	gui.add( bloomPass.params, 'applyZoomBlur' );
 	gui.add( bloomPass.params, 'zoomBlurStrength' ).min(0).max(2);
 	gui.add( bloomPass.params, 'useTexture' );
