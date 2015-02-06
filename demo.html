@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Wagner - Minefield!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+    body {
+        color: #ffffff;
+        font-family: 'roboto condensed', tahoma;
+        font-size: 13px;
+        text-align: left;
+        font-weight: 100;
+        background-color: #111;
+        background-image: url(escheresque_ste.png );
+        margin: 0px;
+        overflow: hidden;
+    }
+    #container canvas {
+        width: 100%;
+        height: 100%;
+    }
+    #fullscreenBtn {
+        position: absolute;
+        right: 270px;
+        top: 10px;
+        color: white;
+        border: 1px solid white;
+        border-radius: 4px;
+        padding: 10px 20px;
+        background-color: black;
+        text-decoration: none;
+    }
+    #fullscreenBtn:hover {
+        color: black;
+        background-color: white;
+    }
+    #about {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        background-color: #000;
+        padding: 10px;
+    }
+    a {
+        color: #b70000;
+    }
+    </style>
+    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+
+    <div id="container"></div>
+    <a href="#" id="fullscreenBtn">Go fullscreen</a>
+    <div id="about">This is the minefield playground for Wagner, a new composer for three.js.
+        <br/> Check out the repo here <a href="https://github.com/spite/Wagner">https://github.com/spite/Wagner</a> and contribute,
+        <br/> open an issue, suggest your ideas. <b>This is extremely work in progress!</b>
+        <br/> Made with and for <a href="http://threejs.org/">three.js</a> | Stats by <a href="http://spite.github.io/rstats/">rStats</a> | <a href="http://www.twitter.com/thespite">@thespite</a> | <a href="http://www.clicktorelease.com">clicktorelease.com</a>
+    </div>
+
+    <script src="js/three.min.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <!--<script src="js/OculusRiftEffect.js"></script>-->
+    <script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>
+    <script src="Wagner.js"></script>
+    <script src="Wagner.base.js"></script>
+    <!--<script src="Wagner.experimental.js"></script>-->
+    <script src="ShaderLoader.js"></script>
+    <script src="js/debugTools.js"></script>
+    <script src="demo.js"></script>
+
+
+</body>
+
+</html>
