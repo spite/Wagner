@@ -275,24 +275,25 @@ WAGNER.ZoomBlurPass.prototype.run = function( c ) {
 
 };
 
-WAGNER.MultiPassBloomPass = function() {
+WAGNER.MultiPassBloomPass = function( w, h ) {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'MultiPassBloomPass Pass constructor' );
 
 	this.composer = null;
 
-	var s = 0.25;
-	this.tmpTexture  = this.getOfflineTexture( 512, 512, true );//s * window.innerWidth, s * window.innerHeight );
+	this.tmpTexture  = this.getOfflineTexture( w, h, true );
 	this.blurPass    = new WAGNER.FullBoxBlurPass();
 	this.blendPass   = new WAGNER.BlendPass();
 	this.zoomBlur    = new WAGNER.ZoomBlurPass();
+	this.brightnessContrastPass = new WAGNER.BrightnessContrastPass();
 
 	this.params.blurAmount = 20;
 	this.params.applyZoomBlur = false;
 	this.params.zoomBlurStrength = 2;
 	this.params.useTexture = false;
 	this.params.zoomBlurCenter = new THREE.Vector2( 0,0 );
+	this.params.blendMode = WAGNER.BlendMode.Screen;
 
 };
 
@@ -316,12 +317,21 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
 	}
 
+	/*var s = 0.5;
+	if( c.width != this.tmpTexture.width / s || c.height != this.tmpTexture.height / s ) {
+		this.tmpTexture  = this.getOfflineTexture( c.width * s, c.height * s, true );
+		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
+	}*/
+
 	this.composer.reset();
 
 	if( this.params.useTexture === true ) {
 		this.composer.setSource( this.params.glowTexture );
 	} else {
 		this.composer.setSource( c.output );
+		/*this.brightnessContrastPass.params.brightness = -1;
+		this.brightnessContrastPass.params.contrast = 5;
+		this.composer.pass( this.brightnessContrastPass );*/
 	}
 
 	this.blurPass.params.amount = this.params.blurAmount;
@@ -339,10 +349,10 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 		c.pass( this.blendPass );
 	}
 
-	this.blendPass.params.mode = WAGNER.BlendMode.Screen;
+	this.blendPass.params.mode = this.params.blendMode;
 	this.blendPass.params.tInput2 = this.composer.output;
 	c.pass( this.blendPass );
-
+	
 };
 
 WAGNER.CGAPass = function() {
