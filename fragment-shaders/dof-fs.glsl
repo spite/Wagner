@@ -1,11 +1,10 @@
 varying vec2 vUv;
 uniform sampler2D tInput;
 uniform sampler2D tBias;
+uniform float focalDistance;
+uniform float aperture;
+uniform float blurAmount;
 uniform vec2 delta;
-uniform float invertBiasMap;
-uniform float isPacked;
-uniform float from;
-uniform float to;
 
 float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,scale))*43758.5453+seed);}
 
@@ -14,10 +13,8 @@ float unpack_depth(const in vec4 color) {
 }
 
 float sampleBias( vec2 uv ) {
-	float b = ( texture2D( tBias, uv ).r - from ) / ( to - from );
-	b = clamp( b, 0., 1. );
-	if( invertBiasMap == 1. ) b = 1. - b;
-	return b;
+	float d = abs( texture2D( tBias, uv ).r - focalDistance );
+	return min( d * aperture, .005 );
 	//return unpack_depth( texture2D( tBias, uv ) );
 }
 

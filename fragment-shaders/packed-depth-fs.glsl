@@ -2,7 +2,6 @@ uniform float mNear;
 uniform float mFar;
 uniform float isPacked;
 varying float depth;
-varying vec3 vNormal;
 
 vec4 pack_depth( const in float f ) {
 	vec4 color;
