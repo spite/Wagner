@@ -3,6 +3,7 @@
 var container, renderer, scene, camera, mesh, torus, material, fov = 70;
 var model, quad, oculusEffect;
 var light, composer;
+var controls;
 
 var links = document.querySelectorAll( 'a[rel=external]' );
 for( var j = 0; j < links.length; j++ ) {
@@ -58,6 +59,8 @@ function init() {
 	camera.position.z = 1000;
 	scene.add( camera );
 
+	controls = new THREE.OrbitControls( camera );
+
 	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setPixelRatio( window.devicePixelRatio );
@@ -67,9 +70,9 @@ function init() {
 
 	container.appendChild( renderer.domElement );
 
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+/*	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	container.addEventListener( 'mousewheel', onMouseWheel, false );
-	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+	container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);*/
 	window.addEventListener( 'resize', onWindowResize, false );
 
 	var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
@@ -254,10 +257,6 @@ function render() {
     rS( 'FPS' ).frame();*/
 
 	light.position.set( 0, 3000 * Math.cos( t ), 2000 * Math.sin( t ) );
-
-	camera.position.x += ( mouseX - camera.position.x ) * .05;
-	camera.position.y += ( - mouseY - camera.position.y ) * .05;
-	camera.lookAt( scene.position );
 
 	renderPass();
 
