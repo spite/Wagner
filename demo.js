@@ -1,6 +1,7 @@
 'use strict';
 
 var composer;
+var stack;
 
 var rS = new rStats( {
     CSSPath: 'http://spite.github.io/rstats/',
@@ -229,6 +230,7 @@ function init() {
         useRGBA: false
     } );
 
+    stack = new WAGNER.Stack();
 
     initShaders();
 
@@ -288,20 +290,20 @@ function render() {
 
 
 
-        shaders.forEach( function ( shader ) {
-            if ( shader.active ) {
+        // shaders.forEach( function ( shader ) {
+        //     if ( shader.active ) {
 
-                if ( shader.pass.params && shader.pass.params.tBias ) {
+        //         if ( shader.pass.params && shader.pass.params.tBias ) {
 
-                    shader.pass.params.tBias = depthTexture;
+        //             shader.pass.params.tBias = depthTexture;
 
-                }
+        //         }
 
-                composer.pass( shader.pass );
 
-            }
-        } );
+        //     }
+        // } );
 
+        composer.pass( stack );
         composer.toScreen();
 
     }
@@ -322,142 +324,108 @@ function initShaders () {
 
     shaders = [ {
             name: 'invertPass',
-            pass: new WAGNER.InvertPass(),
-            active: false
+            pass: new WAGNER.InvertPass()
         }, {
             name: 'fxaaPass',
-            pass: new WAGNER.FXAAPass(),
-            active: false
+            pass: new WAGNER.FXAAPass()
         }, {
             name: 'ssaoPass',
-            pass: new WAGNER.SSAOPass(),
-            active: false
+            pass: new WAGNER.SSAOPass()
         }, {
             name: 'sepiaPass',
-            pass: new WAGNER.SepiaPass(),
-            active: false
+            pass: new WAGNER.SepiaPass()
         }, {
             name: 'boxBlurPass',
-            pass: new WAGNER.BoxBlurPass(),
-            active: false
+            pass: new WAGNER.BoxBlurPass()
         }, {
             name: 'fullBoxBlurPass',
-            pass: new WAGNER.FullBoxBlurPass(),
-            active: false
+            pass: new WAGNER.FullBoxBlurPass()
         }, {
             name: 'zoomBlurPass',
-            pass: new WAGNER.ZoomBlurPass(),
-            active: false
+            pass: new WAGNER.ZoomBlurPass()
         }, {
             name: 'multiPassBloomPass',
-            pass: new WAGNER.MultiPassBloomPass(),
-            active: false
+            pass: new WAGNER.MultiPassBloomPass()
         }, {
             name: 'denoisePass',
-            pass: new WAGNER.DenoisePass(),
-            active: false
+            pass: new WAGNER.DenoisePass()
         }, {
             name: 'CGAPass',
-            pass: new WAGNER.CGAPass(),
-            active: false
+            pass: new WAGNER.CGAPass()
         }, {
             name: 'sobelEdgeDetectionPass',
-            pass: new WAGNER.SobelEdgeDetectionPass(),
-            active: false
+            pass: new WAGNER.SobelEdgeDetectionPass()
         }, {
             name: 'blendPass',
-            pass: new WAGNER.BlendPass(),
-            active: false
+            pass: new WAGNER.BlendPass()
         }, {
             name: 'guidedBoxPass',
-            pass: new WAGNER.GuidedBoxBlurPass(),
-            active: false
+            pass: new WAGNER.GuidedBoxBlurPass()
         }, {
             name: 'guidedFullBoxBlurPass',
-            pass: new WAGNER.GuidedFullBoxBlurPass(),
-            active: false
+            pass: new WAGNER.GuidedFullBoxBlurPass()
         }, {
             name: 'pixelatePass',
-            pass: new WAGNER.PixelatePass(),
-            active: false
+            pass: new WAGNER.PixelatePass()
         }, {
             name: 'rgbSplitPass',
-            pass: new WAGNER.RGBSplitPass(),
-            active: false
+            pass: new WAGNER.RGBSplitPass()
         }, {
             name: 'chromaticAberrationPass',
-            pass: new WAGNER.ChromaticAberrationPass(),
-            active: false
+            pass: new WAGNER.ChromaticAberrationPass()
         }, {
             name: 'barrelBlurPass',
-            pass: new WAGNER.BarrelBlurPass(),
-            active: false
+            pass: new WAGNER.BarrelBlurPass()
         }, {
             name: 'oldVideoPass',
-            pass: new WAGNER.OldVideoPass(),
-            active: false
+            pass: new WAGNER.OldVideoPass()
         }, {
             name: 'dotScreenPass',
-            pass: new WAGNER.DotScreenPass(),
-            active: false
+            pass: new WAGNER.DotScreenPass()
         }, {
             name: 'circularBlur',
-            pass: new WAGNER.CircularBlurPass(),
-            active: false
+            pass: new WAGNER.CircularBlurPass()
         }, {
             name: 'poissonDiscBlur',
-            pass: new WAGNER.PoissonDiscBlurPass(),
-            active: false
+            pass: new WAGNER.PoissonDiscBlurPass()
         }, {
             name: 'vignettePass',
-            pass: new WAGNER.VignettePass(),
-            active: false
+            pass: new WAGNER.VignettePass()
         }, {
             name: 'vignette2Pass',
-            pass: new WAGNER.Vignette2Pass(),
-            active: false
+            pass: new WAGNER.Vignette2Pass()
         }, {
             name: 'freiChenEdgeDetectionPass',
-            pass: new WAGNER.FreiChenEdgeDetectionPass(),
-            active: false
+            pass: new WAGNER.FreiChenEdgeDetectionPass()
         }, {
             name: 'toonPass',
-            pass: new WAGNER.ToonPass(),
-            active: false
+            pass: new WAGNER.ToonPass()
         }, {
             name: 'highPassPass',
-            pass: new WAGNER.HighPassPass(),
-            active: false
+            pass: new WAGNER.HighPassPass()
         }, {
             name: 'grayscalePass',
-            pass: new WAGNER.GrayscalePass(),
-            active: false
+            pass: new WAGNER.GrayscalePass()
         }, {
             name: 'asciiPass',
-            pass: new WAGNER.ASCIIPass(),
-            active: false
+            pass: new WAGNER.ASCIIPass()
         }, {
             name: 'ledPass',
-            pass: new WAGNER.LEDPass(),
-            active: false
+            pass: new WAGNER.LEDPass()
         }, {
             name: 'halftonePass',
-            pass: new WAGNER.HalftonePass(),
-            active: false
+            pass: new WAGNER.HalftonePass()
         }, {
             name: 'dirtPass',
-            pass: new WAGNER.DirtPass(),
-            active: false
+            pass: new WAGNER.DirtPass()
         }, {
             name: 'noisePass',
-            pass: new WAGNER.NoisePass(),
-            active: false
+            pass: new WAGNER.NoisePass()
         }
 
         // {
         //      name: 'halftoneCMYKPass',
         //      pass: new WAGNER.HalftoneCMYKPass(),
-        //      active: false   
         // },
 
     ];
@@ -475,13 +443,26 @@ function initShaders () {
     var gui = new dat.GUI();
     // gui.add(shaders.multiPassBloomPass.params, 'blurAmount', 0, 10 );
 
-    shaders.forEach( function ( shader, index ) {
+    shaders.forEach( function ( shaderItem, index ) {
 
-        var shaderFolder = gui.addFolder( shader.name );
-        var shaderParams = shader.pass.params;
+        // store shader name so we can access later in GUI
+        shaderItem.pass.name = shaderItem.name;
 
-        shaderFolder.add( shader, 'active' )
+        // add pass to composer stack
+        stack.addPass(shaderItem.pass);
 
+        // init datGUI
+        var shaderFolder = gui.addFolder( shaderItem.name );
+        var shaderParams = shaderItem.pass.params;
+
+        var enabledController = shaderFolder.add( shaderItem.pass, 'enabled' );
+
+        enabledController.onChange( function() {
+
+            updateEnabledShadersList();
+
+        });
+ 
         for ( var paramName in shaderParams ) {
 
             if ( shaderParams.hasOwnProperty( paramName ) ) {
@@ -510,16 +491,112 @@ function initShaders () {
                                 paramFolder.add( shaderParams[ paramName ], subParamName );
 
                             }
-
                         }
-
                     }
-                } else {
-                    // shaderFolder.addFolder( param );
                 }
-
             }
+        }
+
+    } );
+
+    var reverseButton = document.getElementById('shaderStackReverse');
+
+    reverseButton.onclick = function() {
+
+        stack.reverse();
+        updateEnabledShadersList();
+        return false;
+
+    };
+
+    updateEnabledShadersList();
+
+}
+
+
+
+// update GUI shaders list view from stack
+function updateEnabledShadersList() {
+
+    var list = document.getElementById('shadersStackList');
+    list.innerHTML = null;
+
+    stack.passes.forEach(function(pass, index) {
+
+        var item = document.createElement('li');
+        item.appendChild(document.createTextNode(pass.name));
+
+        if ( index < stack.passes.length - 1 ) {
+
+            var buttonDown = document.createElement('a');
+            buttonDown.href = '#';
+            buttonDown.appendChild(document.createTextNode('down'));
+
+            buttonDown.onclick = function() {
+
+                stack.movePassToIndex(index, index + 1);
+                updateEnabledShadersList();
+                return false;
+
+            };
+
+            var buttonBottom = document.createElement('a');
+            buttonBottom.href = '#';
+            buttonBottom.appendChild(document.createTextNode('bottom'));
+
+            buttonBottom.onclick = function() {
+
+                stack.movePassToIndex(index, stack.passes.length - 1);
+                updateEnabledShadersList();
+                return false;
+
+            };
+
+            item.appendChild( buttonBottom );
+            item.appendChild( buttonDown );
 
         }
-    } );
+
+        if ( index > 0 ) {
+
+            var buttonUp = document.createElement('a');
+            buttonUp.href = '#';
+            buttonUp.appendChild(document.createTextNode('up'));
+
+            buttonUp.onclick = function() {
+
+                stack.movePassToIndex(index, index - 1);
+                updateEnabledShadersList();
+                return false;
+
+            };
+
+            var buttonTop = document.createElement('a');
+            buttonTop.href = '#';
+            buttonTop.appendChild(document.createTextNode('top'));
+
+            buttonTop.onclick = function() {
+
+                stack.movePassToIndex(index, 0);
+                updateEnabledShadersList();
+                return false;
+
+            };
+
+            item.appendChild( buttonUp );
+            item.appendChild( buttonTop );
+            
+        }
+
+
+        if ( !pass.enabled ) {
+
+            item.className = 'disabled';
+
+        }
+
+        list.appendChild( item );
+
+    });
+
 }

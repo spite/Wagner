@@ -111,24 +111,42 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 
 WAGNER.Composer.prototype.pass = function( pass ) {
 
-	if( typeof pass === 'string' ) {
-		this.quad.material = this.passes[ pass ];
-	}
-	if( pass instanceof THREE.ShaderMaterial ) {
-		this.quad.material = pass;
-	}
-	if( pass instanceof WAGNER.Pass ) {
-		if( !pass.isLoaded() ) return;
-		pass.run( this );
-		return;
+	if( pass instanceof WAGNER.Stack ) {
+
+		this.passStack(pass);
+
+	} else {
+
+		if( typeof pass === 'string' ) {
+			this.quad.material = this.passes[ pass ];
+		}
+		if( pass instanceof THREE.ShaderMaterial ) {
+			this.quad.material = pass;
+		}
+		if( pass instanceof WAGNER.Pass ) {
+			if( !pass.isLoaded() ) return;
+			pass.run( this );
+			return;
+		}
+
+		if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
+		
+		this.quad.material.uniforms.resolution.value.set( this.width, this.height );
+		this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
+		this.renderer.render( this.scene, this.camera, this.write, false );
+		this.swapBuffers();
+
 	}
 
-	if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
-	
-	this.quad.material.uniforms.resolution.value.set( this.width, this.height );
-	this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
-	this.renderer.render( this.scene, this.camera, this.write, false );
-	this.swapBuffers();
+};
+
+WAGNER.Composer.prototype.passStack = function( stack ) {
+
+	stack.getEnabledPasses().forEach( function ( pass ) {
+
+		this.pass( pass );
+
+	}.bind(this));
 
 };
 
@@ -398,6 +416,55 @@ WAGNER.GenericPass = function( fragmentShaderSource, c ) {
 }
 
 WAGNER.GenericPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+
+
+WAGNER.Stack = function ( renderer, settings ) {
+
+    this.passes = [];
+
+};
+
+WAGNER.Stack.prototype.addPass = function ( pass, enabled, position ) {
+
+	pass.enabled = enabled || false;
+
+    this.passes.push(pass);
+
+    return this.passes.length - 1;
+
+};
+
+WAGNER.Stack.prototype.getEnabledPasses = function ( pass, position ) {
+
+    var enabledPasses = [];
+
+    this.passes.forEach( function ( pass ) {
+
+    	if (pass.enabled) {
+
+    		enabledPasses.push(pass);
+
+    	}
+
+    } );
+
+    return enabledPasses;
+
+};
+
+WAGNER.Stack.prototype.movePassToIndex = function ( index, destIndex ) {
+
+    this.passes.splice(destIndex, 0, this.passes.splice(index, 1)[0]);
+
+};
+
+WAGNER.Stack.prototype.reverse = function () {
+
+    this.passes.reverse();
+
+};
+
 
 window.WAGNER = WAGNER;
 })();
