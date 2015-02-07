@@ -24,7 +24,7 @@
     #fullscreenBtn {
         position: absolute;
         right: 270px;
-        top: 10px;
+        bottom: 10px;
         color: white;
         border: 1px solid white;
         border-radius: 4px;
@@ -46,6 +46,37 @@
     a {
         color: #b70000;
     }
+    #shadersStack {
+        position: absolute;
+        right: 270px;
+        width: 300px;
+        top: 10px;
+        color: white;
+        border: 1px solid white;
+        border-radius: 4px;
+        padding: 10px 20px;
+        background-color: black;
+        text-decoration: none;
+    }
+    #shadersStack:hover #shadersStackList {
+        display: block;
+    }
+    #shadersStackList {
+    	display: none;
+    	list-style: none;
+    	padding: 0;
+    	margin: 0;
+    }
+    #shadersStackList li:hover, #shadersStackList li:active {
+    	background-color: #111;
+    }
+    #shadersStackList li.disabled {
+    	color: #777;
+    }
+    #shadersStackList a {
+    	float: right;
+    	margin: 0 4px;
+    }
     </style>
     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
 </head>
@@ -54,6 +85,10 @@
 
     <div id="container"></div>
     <a href="#" id="fullscreenBtn">Go fullscreen</a>
+    <div id="shadersStack">
+    	Shaders Stack Order <a href="#" id="shaderStackReverse">(reverse)</a>
+    	<ul id="shadersStackList"></ul>
+    </div>
     <div id="about">This is the minefield playground for Wagner, a new composer for three.js.
         <br/> Check out the repo here <a href="https://github.com/spite/Wagner">https://github.com/spite/Wagner</a> and contribute,
         <br/> open an issue, suggest your ideas. <b>This is extremely work in progress!</b>
@@ -65,7 +100,7 @@
     <script src="js/OrbitControls.js"></script>
     <!--<script src="js/OculusRiftEffect.js"></script>-->
     <script src="http://spite.github.io/rstats/rStats.js" ></script>
-<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>
+	<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>
     <script src="Wagner.js"></script>
     <script src="Wagner.base.js"></script>
     <!--<script src="Wagner.experimental.js"></script>-->
