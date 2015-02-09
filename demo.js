@@ -226,7 +226,7 @@ function init() {
     renderer.shadowMapType = THREE.PCFShadowMap;
 
     composer = new WAGNER.Composer( renderer, {
-        useRGBA: false
+        useRGBA: true
     } );
 
 
