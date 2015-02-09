@@ -1,6 +1,7 @@
 {
-  "name": "wagner",
-  "version": "0.0.0",
+  "name": "Wagner",
+  "version": "0.0.1",
+  "main": "Wagner/",
   "description": "Effects composer for three.js",
   "authors": [
     "Jaume Sanchez"
