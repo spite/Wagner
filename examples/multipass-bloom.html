@@ -38,6 +38,7 @@
 <script src="../Wagner.experimental.js"></script>
 <script src="../ShaderLoader.js"></script>
 <script src="../js/debugTools.js"></script>
+<script src="../js/OrbitControls.js"></script>
 
 <script src="DAT.GUI.min.js"></script>
 <script src="main.js"></script>
@@ -71,7 +72,7 @@ function initPass() {
 
 	gui = new DAT.GUI();
 
-	gui.add( bloomPass.params, 'blurAmount' ).min(0).max(4);
+	gui.add( bloomPass.params, 'blurAmount' ).min(0).max(2);
 	gui.add( bloomPass.params, 'applyZoomBlur' );
 	gui.add( bloomPass.params, 'zoomBlurStrength' ).min(0).max(2);
 	gui.add( bloomPass.params, 'useTexture' );

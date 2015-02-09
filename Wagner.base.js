@@ -288,6 +288,9 @@ WAGNER.MultiPassBloomPass = function( w, h ) {
 	this.zoomBlur    = new WAGNER.ZoomBlurPass();
 	this.brightnessContrastPass = new WAGNER.BrightnessContrastPass();
 
+	this.width = w || 512;
+	this.height = h || 512;
+
 	this.params.blurAmount = 20;
 	this.params.applyZoomBlur = false;
 	this.params.zoomBlurStrength = 2;
@@ -314,7 +317,8 @@ WAGNER.MultiPassBloomPass.prototype.run = function( c ) {
 
 	if( !this.composer ) {
 		this.composer = new WAGNER.Composer( c.renderer, { useRGBA: true } );
-		this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
+		this.composer.setSize( this.width, this.height );
+		//this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
 	}
 
 	/*var s = 0.5;
