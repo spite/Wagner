@@ -142,7 +142,7 @@ WAGNER.Composer.prototype.pass = function( pass ) {
 
 WAGNER.Composer.prototype.passStack = function( stack ) {
 
-	stack.getEnabledPasses().forEach( function ( pass ) {
+	stack.getPasses().forEach( function ( pass ) {
 
 		this.pass( pass );
 
@@ -419,51 +419,150 @@ WAGNER.GenericPass.prototype = Object.create( WAGNER.Pass.prototype );
 
 
 
-WAGNER.Stack = function ( renderer, settings ) {
 
+WAGNER.Stack = function ( shadersPool ) {
+
+    this.passItems = [];
+    this.shadersPool = shadersPool;
     this.passes = [];
 
 };
 
-WAGNER.Stack.prototype.addPass = function ( pass, enabled, position ) {
+WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, position ) {
 
-	pass.enabled = enabled || false;
+    var length;
 
-    this.passes.push(pass);
+    var stackItem = {
+        shaderName: shaderName,
+        enabled: enabled || false
+    }
 
-    return this.passes.length - 1;
+    this.passItems.push( stackItem );
+    length = this.passItems.length;
+    
+    this.updatePasses();
 
-};
+    if ( position ) {
 
-WAGNER.Stack.prototype.getEnabledPasses = function ( pass, position ) {
+        return this.movePassToIndex( this.passItems[ length ], position );
 
-    var enabledPasses = [];
+    } else {
 
-    this.passes.forEach( function ( pass ) {
+        return length - 1;
 
-    	if (pass.enabled) {
-
-    		enabledPasses.push(pass);
-
-    	}
-
-    } );
-
-    return enabledPasses;
+    }
 
 };
 
 WAGNER.Stack.prototype.movePassToIndex = function ( index, destIndex ) {
 
-    this.passes.splice(destIndex, 0, this.passes.splice(index, 1)[0]);
+    this.passItems.splice( destIndex, 0, this.passItems.splice( index, 1 )[ 0 ] );
+    this.updatePasses();
+    return destIndex; //TODO: check if destIndex is final index
 
 };
 
 WAGNER.Stack.prototype.reverse = function () {
 
-    this.passes.reverse();
+    this.passItems.reverse();
+    this.updatePasses();
 
 };
+
+WAGNER.Stack.prototype.updatePasses = function () {
+
+    this.passes = this.shadersPool.getPasses( this.passItems );
+	console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
+
+};
+
+WAGNER.Stack.prototype.getPasses = function () {
+
+    return this.passes;
+
+};
+
+
+
+
+
+WAGNER.ShadersPool = function () {
+
+    this.availableShaders = [];
+
+};
+
+WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
+
+    this.availableShaders.forEach( function ( availableShader ) {
+
+        availableShader.used = false;
+
+    } );
+
+    var passes = [];
+
+    if ( passItems ) {
+
+        passItems.forEach( function ( passItem, index ) {
+
+            if ( passItem.enabled ) {
+
+                passes.push( this.getShaderFromPool( passItem.shaderName ) );
+
+            }
+
+        }.bind( this ) );
+
+    }
+
+    return passes;
+
+};
+
+WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName ) {
+
+    var pass,
+        shaderItem;
+
+    if ( shaderName && WAGNER[ shaderName ] ) {
+
+    	for (var i = this.availableShaders.length - 1; i >= 0; i--) {
+
+    		shaderItem = this.availableShaders[i];
+
+            if ( !shaderItem.used && shaderItem.name === shaderName ) {
+
+                shaderItem.used = true;
+                pass = shaderItem.pass;
+                break;
+
+            }
+    		
+    	};
+
+        if ( !pass ) {
+
+            pass = new WAGNER[ shaderName ]();
+
+            shaderItem = {
+                pass: pass,
+                name: shaderName,
+                used: true
+            };
+
+            this.availableShaders.push( shaderItem );
+
+        }
+
+        return pass;
+
+    }
+
+};
+
+
+
 
 
 window.WAGNER = WAGNER;

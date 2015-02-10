@@ -230,7 +230,7 @@ function init() {
         useRGBA: true
     } );
 
-    stack = new WAGNER.Stack();
+    stack = new WAGNER.Stack( new WAGNER.ShadersPool() );
 
     initShaders();
 
@@ -316,11 +316,11 @@ function render() {
 
 }
 
-function toType ( obj ) {
+function toType( obj ) {
     return ( {} ).toString.call( obj ).match( /\s([a-zA-Z]+)/ )[ 1 ].toLowerCase()
 }
 
-function initShaders () {
+function initShaders() {
 
     shaders = [ {
             name: 'invertPass',
@@ -440,162 +440,194 @@ function initShaders () {
 
 
 
-    var gui = new dat.GUI();
+    // var gui = new dat.GUI();
 
-    shaders.forEach( function ( shaderItem, index ) {
+    // shaders.forEach( function ( shaderItem, index ) {
 
-        // store shader name so we can access later in GUI
-        shaderItem.pass.name = shaderItem.name;
+    //     // store shader name so we can access later in GUI
+    //     shaderItem.pass.name = shaderItem.name;
 
-        // add pass to composer stack
-        stack.addPass(shaderItem.pass);
+    //     // add pass to composer stack
+    //     stack.addPass(shaderItem.pass);
 
-        // init datGUI
-        var shaderFolder = gui.addFolder( shaderItem.name );
-        var shaderParams = shaderItem.pass.params;
+    //     // init datGUI
+    //     var shaderFolder = gui.addFolder( shaderItem.name );
+    //     var shaderParams = shaderItem.pass.params;
 
-        var enabledController = shaderFolder.add( shaderItem.pass, 'enabled' );
+    //     var enabledController = shaderFolder.add( shaderItem.pass, 'enabled' );
 
-        enabledController.onChange( function() {
+    //     enabledController.onChange( function() {
 
-            updateEnabledShadersList();
+    //         updateEnabledShadersList();
 
-        });
- 
-        for ( var paramName in shaderParams ) {
+    //     });
 
-            if ( shaderParams.hasOwnProperty( paramName ) ) {
+    //     for ( var paramName in shaderParams ) {
 
-                var paramType = toType( shaderParams[ paramName ] );
+    //         if ( shaderParams.hasOwnProperty( paramName ) ) {
 
-                if ( paramType === 'number' ||
-                    paramType === 'boolean' ||
-                    paramType === 'string' ) {
+    //             var paramType = toType( shaderParams[ paramName ] );
 
-                    shaderFolder.add( shaderParams, paramName );
+    //             if ( paramType === 'number' ||
+    //                 paramType === 'boolean' ||
+    //                 paramType === 'string' ) {
 
-                } else if ( paramType === 'object' ) {
+    //                 shaderFolder.add( shaderParams, paramName );
 
-                    var paramFolder = shaderFolder.addFolder( paramName );
+    //             } else if ( paramType === 'object' ) {
 
-                    for ( var subParamName in shaderParams[ paramName ] ) {
+    //                 var paramFolder = shaderFolder.addFolder( paramName );
 
-                        if ( shaderParams[ paramName ].hasOwnProperty( subParamName ) ) {
+    //                 for ( var subParamName in shaderParams[ paramName ] ) {
 
-                            var subParamType = toType( shaderParams[ paramName ][ subParamName ] );
-                            if ( subParamType === 'number' ||
-                                subParamType === 'boolean' ||
-                                subParamType === 'string' ) {
+    //                     if ( shaderParams[ paramName ].hasOwnProperty( subParamName ) ) {
 
-                                paramFolder.add( shaderParams[ paramName ], subParamName );
+    //                         var subParamType = toType( shaderParams[ paramName ][ subParamName ] );
+    //                         if ( subParamType === 'number' ||
+    //                             subParamType === 'boolean' ||
+    //                             subParamType === 'string' ) {
 
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    //                             paramFolder.add( shaderParams[ paramName ], subParamName );
 
-    } );
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-    var reverseButton = document.getElementById('shaderStackReverse');
+    // } );
 
-    reverseButton.onclick = function() {
+    var reverseButton = document.getElementById( 'shaderStackReverse' );
+
+    reverseButton.onclick = function () {
 
         stack.reverse();
-        updateEnabledShadersList();
         return false;
 
     };
 
-    updateEnabledShadersList();
 
 }
 
 
 
-// update GUI shaders list view from stack
-function updateEnabledShadersList() {
 
-    var list = document.getElementById('shadersStackList');
-    list.innerHTML = null;
 
-    stack.passes.forEach(function(pass, index) {
 
-        var item = document.createElement('li');
-        item.appendChild(document.createTextNode(pass.name));
+var Editor = ( function () {
 
-        if ( index < stack.passes.length - 1 ) {
+    var $addShaderInput = $( '#add-shader-input' ),
+        $addShaderButton = $( '#add-shader-button' ),
+        $shadersList = $( '#shaders-list' );
 
-            var buttonDown = document.createElement('a');
-            buttonDown.href = '#';
-            buttonDown.appendChild(document.createTextNode('down'));
+    function init() {
 
-            buttonDown.onclick = function() {
+        shaders = [ 'InvertPass', 'FXAAPass', 'SSAOPass', 'SepiaPass', 'BoxBlurPass', 'FullBoxBlurPass', 'ZoomBlurPass', 'MultiPassBloomPass', 'DenoisePass', 'CGAPass', 'SobelEdgeDetectionPass', 'BlendPass', 'GuidedBoxBlurPass', 'GuidedFullBoxBlurPass', 'PixelatePass', 'RGBSplitPass', 'ChromaticAberrationPass', 'BarrelBlurPass', 'OldVideoPass', 'DotScreenPass', 'CircularBlurPass', 'PoissonDiscBlurPass', 'VignettePass', 'Vignette2Pass', 'FreiChenEdgeDetectionPass', 'ToonPass', 'HighPassPass', 'GrayscalePass', 'ASCIIPass', 'LEDPass', 'HalftonePass', 'DirtPass', 'NoisePass' ];
 
-                stack.movePassToIndex(index, index + 1);
-                updateEnabledShadersList();
-                return false;
+        shaders.forEach( function ( shaderName ) {
 
-            };
+            $addShaderInput.append( '<option value="' + shaderName + '">' + shaderName + '</option>' );
 
-            var buttonBottom = document.createElement('a');
-            buttonBottom.href = '#';
-            buttonBottom.appendChild(document.createTextNode('bottom'));
+        } );
 
-            buttonBottom.onclick = function() {
+        $addShaderButton.on( 'click', function () {
 
-                stack.movePassToIndex(index, stack.passes.length - 1);
-                updateEnabledShadersList();
-                return false;
+            var newShaderName = $addShaderInput.val();
 
-            };
+            stack.addPass( newShaderName, true )
 
-            item.appendChild( buttonBottom );
-            item.appendChild( buttonDown );
+            updateEnabledShadersList();
 
+
+        } );
+
+    }
+
+    function updateEnabledShadersList() {
+
+        $shadersList.empty();
+
+        if ( stack.passItems ) {
+
+            stack.passItems.forEach( function ( passItems, index ) {
+
+                var item = $( '<li>' + passItems.shaderName + '</li>' )
+
+                if ( index < stack.passItems.length - 1 ) {
+
+                    var buttonDown = $( '<a href="#">down</a>' );
+
+                    buttonDown.on( 'click', function () {
+
+                        console.log( 'down', index )
+                        stack.movePassToIndex( index, index + 1 );
+                        updateEnabledShadersList();
+                        return false;
+
+                    } );
+
+                    var buttonBottom = $( '<a href="#">bottom</a>' );
+
+                    buttonBottom.on( 'click', function () {
+
+                        stack.movePassToIndex( index, stack.passItems.length - 1 );
+                        updateEnabledShadersList();
+                        return false;
+
+                    } );
+
+                    item.append( buttonBottom );
+                    item.append( buttonDown );
+
+                }
+
+                if ( index > 0 ) {
+
+                    var buttonUp = $( '<a href="#">up</a>' );
+
+                    buttonUp.on( 'click', function () {
+
+                        stack.movePassToIndex( index, index - 1 );
+                        updateEnabledShadersList();
+                        return false;
+
+                    } );
+
+                    var buttonTop = $( '<a href="#">top</a>' );
+
+                    buttonTop.on( 'click', function () {
+
+                        stack.movePassToIndex( index, 0 );
+                        updateEnabledShadersList();
+                        return false;
+
+                    } );
+
+                    item.append( buttonTop );
+                    item.append( buttonUp );
+
+                }
+
+
+                if ( !passItems.enabled ) {
+
+                    item.addClass = 'disabled';
+
+                }
+
+                $shadersList.append( item );
+
+            } );
         }
+    }
 
-        if ( index > 0 ) {
+    return {
+        init: init
+    };
 
-            var buttonUp = document.createElement('a');
-            buttonUp.href = '#';
-            buttonUp.appendChild(document.createTextNode('up'));
+} )();
 
-            buttonUp.onclick = function() {
-
-                stack.movePassToIndex(index, index - 1);
-                updateEnabledShadersList();
-                return false;
-
-            };
-
-            var buttonTop = document.createElement('a');
-            buttonTop.href = '#';
-            buttonTop.appendChild(document.createTextNode('top'));
-
-            buttonTop.onclick = function() {
-
-                stack.movePassToIndex(index, 0);
-                updateEnabledShadersList();
-                return false;
-
-            };
-
-            item.appendChild( buttonUp );
-            item.appendChild( buttonTop );
-            
-        }
-
-
-        if ( !pass.enabled ) {
-
-            item.className = 'disabled';
-
-        }
-
-        list.appendChild( item );
-
-    });
-
-}
+$( function () {
+    Editor.init();
+} );

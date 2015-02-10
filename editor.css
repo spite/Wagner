@@ -78,3 +78,6 @@ a {
     top: 0;
     right: 0;
 }
+#shaders-list {
+    color: #222;
+}
