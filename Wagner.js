@@ -428,7 +428,7 @@ WAGNER.Stack = function ( shadersPool ) {
 
 };
 
-WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, position ) {
+WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, index ) {
 
     var length;
 
@@ -442,15 +442,22 @@ WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, position ) {
     
     this.updatePasses();
 
-    if ( position ) {
+    if ( index ) {
 
-        return this.movePassToIndex( this.passItems[ length ], position );
+        return this.movePassToIndex( this.passItems[ length ], index );
 
     } else {
 
         return length - 1;
 
     }
+
+};
+
+WAGNER.Stack.prototype.removePass = function ( index ) {
+
+    this.passItems.splice(index, 1);
+    this.updatePasses();
 
 };
 

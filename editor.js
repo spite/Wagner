@@ -519,7 +519,8 @@ var Editor = ( function () {
 
     var $addShaderInput = $( '#add-shader-input' ),
         $addShaderButton = $( '#add-shader-button' ),
-        $shadersList = $( '#shaders-list' );
+        $shadersList = $( '#shaders-list' ),
+        sortable;
 
     function init() {
 
@@ -539,20 +540,31 @@ var Editor = ( function () {
 
             updateEnabledShadersList();
 
-
         } );
+
+        var sortable = Sortable.create($shadersList[0], {
+            onEnd: function (event) {
+                stack.movePassToIndex( event.oldIndex, event.newIndex );
+            }
+        });
 
     }
 
     function updateEnabledShadersList() {
 
+        var $shaderItem, 
+            $shaderControls,
+            $shaderParams;
+
         $shadersList.empty();
 
         if ( stack.passItems ) {
 
-            stack.passItems.forEach( function ( passItems, index ) {
+            stack.passItems.forEach( function ( passItem, index ) {
 
-                var item = $( '<li>' + passItems.shaderName + '</li>' )
+                $shaderItem = $( '<li>' + passItem.shaderName + '<div class="shader-controls"></div><ul class="shader-params"></ul></li>' );
+                $shaderControls = $shaderItem.find('.shader-controls');
+                $shaderParams   = $shaderItem.find('.shader-params');
 
                 if ( index < stack.passItems.length - 1 ) {
 
@@ -577,8 +589,8 @@ var Editor = ( function () {
 
                     } );
 
-                    item.append( buttonBottom );
-                    item.append( buttonDown );
+                    $shaderControls.append( buttonBottom );
+                    $shaderControls.append( buttonDown );
 
                 }
 
@@ -604,22 +616,79 @@ var Editor = ( function () {
 
                     } );
 
-                    item.append( buttonTop );
-                    item.append( buttonUp );
+                    $shaderControls.append( buttonTop );
+                    $shaderControls.append( buttonUp );
 
                 }
 
+                var buttonDelete = $( '<a href="#">delete</a>' );
 
-                if ( !passItems.enabled ) {
+                buttonDelete.on( 'click', function () {
 
-                    item.addClass = 'disabled';
+                    stack.removePass( index );
+                    updateEnabledShadersList();
+                    return false;
+
+                } );
+
+                $shaderControls.append( buttonDelete );
+
+
+                if ( !passItem.enabled ) {
+
+                    $shaderItem.addClass = 'disabled';
 
                 }
 
-                $shadersList.append( item );
+                addShaderParamsInputs(passItem.shaderName, $shaderParams);
+
+                $shadersList.append( $shaderItem );
 
             } );
         }
+    }
+
+    function addShaderParamsInputs(shaderName, $shaderParams) {
+
+        var shader = new WAGNER[shaderName]();
+
+        if (shader && shader.params) {
+
+            console.log(shader.params);
+            addParamsInputs(shader.params, $shaderParams);
+
+        }
+    }
+
+    function addParamsInputs(params, $parent) {
+
+        var $shaderParamValueInput;
+
+        for ( var paramName in params ) {
+
+                if ( params.hasOwnProperty( paramName ) ) {
+
+                    var paramType = toType( params[ paramName ] );
+
+                    if ( paramType === 'number' ||
+                        paramType === 'boolean' ||
+                        paramType === 'string' ) {
+
+                        $parent.append( '<li><div class="shader-param-name">' + paramName + '</div><input class="shader-param-value" value="' + params[ paramName ] + '"/></li>' );
+                        $shaderParamValueInput = $parent.find('input');
+                        $shaderParamValueInput.on('change', function (event) {
+                            console.log($(this).val(), params[ paramName ]);
+                        });
+
+                    } else if ( paramType === 'object' ) {
+
+                        var $containerParam = $parent.append( '<li><ul>' + paramName + '</ul></li>' ).find('ul');
+
+                        addParamsInputs(params[ paramName ], $containerParam);
+                    }
+                }
+            }
+
     }
 
     return {
