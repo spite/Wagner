@@ -419,7 +419,6 @@ WAGNER.GenericPass.prototype = Object.create( WAGNER.Pass.prototype );
 
 
 
-
 WAGNER.Stack = function ( shadersPool ) {
 
     this.passItems = [];
