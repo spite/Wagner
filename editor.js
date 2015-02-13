@@ -232,8 +232,6 @@ function init() {
 
     stack = new WAGNER.Stack( new WAGNER.ShadersPool() );
 
-    initShaders();
-
     onWindowResize();
 
     render();
@@ -275,9 +273,7 @@ function render() {
     //light.position.set( 0, 3000 * Math.cos( t ), 2000 * Math.sin( t ) );
 
     if ( model ) {
-        /*model.rotation.x += .001;
-        model.rotation.y += .001;
-        model.rotation.z += .005;*/
+        model.rotation.y += .0005;
 
         renderer.autoClearColor = true;
         composer.reset();
@@ -320,195 +316,6 @@ function toType( obj ) {
     return ( {} ).toString.call( obj ).match( /\s([a-zA-Z]+)/ )[ 1 ].toLowerCase()
 }
 
-function initShaders() {
-
-    shaders = [ {
-            name: 'invertPass',
-            pass: new WAGNER.InvertPass()
-        }, {
-            name: 'fxaaPass',
-            pass: new WAGNER.FXAAPass()
-        }, {
-            name: 'ssaoPass',
-            pass: new WAGNER.SSAOPass()
-        }, {
-            name: 'sepiaPass',
-            pass: new WAGNER.SepiaPass()
-        }, {
-            name: 'boxBlurPass',
-            pass: new WAGNER.BoxBlurPass()
-        }, {
-            name: 'fullBoxBlurPass',
-            pass: new WAGNER.FullBoxBlurPass()
-        }, {
-            name: 'zoomBlurPass',
-            pass: new WAGNER.ZoomBlurPass()
-        }, {
-            name: 'multiPassBloomPass',
-            pass: new WAGNER.MultiPassBloomPass()
-        }, {
-            name: 'denoisePass',
-            pass: new WAGNER.DenoisePass()
-        }, {
-            name: 'CGAPass',
-            pass: new WAGNER.CGAPass()
-        }, {
-            name: 'sobelEdgeDetectionPass',
-            pass: new WAGNER.SobelEdgeDetectionPass()
-        }, {
-            name: 'blendPass',
-            pass: new WAGNER.BlendPass()
-        }, {
-            name: 'guidedBoxPass',
-            pass: new WAGNER.GuidedBoxBlurPass()
-        }, {
-            name: 'guidedFullBoxBlurPass',
-            pass: new WAGNER.GuidedFullBoxBlurPass()
-        }, {
-            name: 'pixelatePass',
-            pass: new WAGNER.PixelatePass()
-        }, {
-            name: 'rgbSplitPass',
-            pass: new WAGNER.RGBSplitPass()
-        }, {
-            name: 'chromaticAberrationPass',
-            pass: new WAGNER.ChromaticAberrationPass()
-        }, {
-            name: 'barrelBlurPass',
-            pass: new WAGNER.BarrelBlurPass()
-        }, {
-            name: 'oldVideoPass',
-            pass: new WAGNER.OldVideoPass()
-        }, {
-            name: 'dotScreenPass',
-            pass: new WAGNER.DotScreenPass()
-        }, {
-            name: 'circularBlur',
-            pass: new WAGNER.CircularBlurPass()
-        }, {
-            name: 'poissonDiscBlur',
-            pass: new WAGNER.PoissonDiscBlurPass()
-        }, {
-            name: 'vignettePass',
-            pass: new WAGNER.VignettePass()
-        }, {
-            name: 'vignette2Pass',
-            pass: new WAGNER.Vignette2Pass()
-        }, {
-            name: 'freiChenEdgeDetectionPass',
-            pass: new WAGNER.FreiChenEdgeDetectionPass()
-        }, {
-            name: 'toonPass',
-            pass: new WAGNER.ToonPass()
-        }, {
-            name: 'highPassPass',
-            pass: new WAGNER.HighPassPass()
-        }, {
-            name: 'grayscalePass',
-            pass: new WAGNER.GrayscalePass()
-        }, {
-            name: 'asciiPass',
-            pass: new WAGNER.ASCIIPass()
-        }, {
-            name: 'ledPass',
-            pass: new WAGNER.LEDPass()
-        }, {
-            name: 'halftonePass',
-            pass: new WAGNER.HalftonePass()
-        }, {
-            name: 'dirtPass',
-            pass: new WAGNER.DirtPass()
-        }, {
-            name: 'noisePass',
-            pass: new WAGNER.NoisePass()
-        }
-
-        // {
-        //      name: 'halftoneCMYKPass',
-        //      pass: new WAGNER.HalftoneCMYKPass(),
-        // },
-
-    ];
-
-
-
-
-
-    // shaders.multiPassBloomPass.params.blurAmount = 2;
-    // shaders.guidedFullBoxBlurPass.params.amount = 20;
-    // shaders.guidedFullBoxBlurPass.params.invertBiasMap = true;
-
-
-
-    // var gui = new dat.GUI();
-
-    // shaders.forEach( function ( shaderItem, index ) {
-
-    //     // store shader name so we can access later in GUI
-    //     shaderItem.pass.name = shaderItem.name;
-
-    //     // add pass to composer stack
-    //     stack.addPass(shaderItem.pass);
-
-    //     // init datGUI
-    //     var shaderFolder = gui.addFolder( shaderItem.name );
-    //     var shaderParams = shaderItem.pass.params;
-
-    //     var enabledController = shaderFolder.add( shaderItem.pass, 'enabled' );
-
-    //     enabledController.onChange( function() {
-
-    //         updateEnabledShadersList();
-
-    //     });
-
-    //     for ( var paramName in shaderParams ) {
-
-    //         if ( shaderParams.hasOwnProperty( paramName ) ) {
-
-    //             var paramType = toType( shaderParams[ paramName ] );
-
-    //             if ( paramType === 'number' ||
-    //                 paramType === 'boolean' ||
-    //                 paramType === 'string' ) {
-
-    //                 shaderFolder.add( shaderParams, paramName );
-
-    //             } else if ( paramType === 'object' ) {
-
-    //                 var paramFolder = shaderFolder.addFolder( paramName );
-
-    //                 for ( var subParamName in shaderParams[ paramName ] ) {
-
-    //                     if ( shaderParams[ paramName ].hasOwnProperty( subParamName ) ) {
-
-    //                         var subParamType = toType( shaderParams[ paramName ][ subParamName ] );
-    //                         if ( subParamType === 'number' ||
-    //                             subParamType === 'boolean' ||
-    //                             subParamType === 'string' ) {
-
-    //                             paramFolder.add( shaderParams[ paramName ], subParamName );
-
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    // } );
-
-    var reverseButton = document.getElementById( 'shaderStackReverse' );
-
-    reverseButton.onclick = function () {
-
-        stack.reverse();
-        return false;
-
-    };
-
-
-}
 
 
 
@@ -542,17 +349,19 @@ var Editor = ( function () {
 
         } );
 
-        var sortable = Sortable.create($shadersList[0], {
-            onEnd: function (event) {
+        var sortable = Sortable.create( $shadersList[ 0 ], {
+            animation: 150,
+            // handle: ".shader-name", 
+            onEnd: function ( event ) {
                 stack.movePassToIndex( event.oldIndex, event.newIndex );
             }
-        });
+        } );
 
     }
 
     function updateEnabledShadersList() {
 
-        var $shaderItem, 
+        var $shaderItem,
             $shaderControls,
             $shaderParams;
 
@@ -562,13 +371,13 @@ var Editor = ( function () {
 
             stack.passItems.forEach( function ( passItem, index ) {
 
-                $shaderItem = $( '<li>' + passItem.shaderName + '<div class="shader-controls"></div><ul class="shader-params"></ul></li>' );
-                $shaderControls = $shaderItem.find('.shader-controls');
-                $shaderParams   = $shaderItem.find('.shader-params');
+                $shaderItem = $( '<li class="shader"><span class="shader-name"><i class="fa fa-angle-right"></i>' + passItem.shaderName + '</span><div class="shader-controls"></div><ul class="shader-params"></ul></li>' );
+                $shaderControls = $shaderItem.find( '.shader-controls' );
+                $shaderParams = $shaderItem.find( '.shader-params' );
 
                 if ( index < stack.passItems.length - 1 ) {
 
-                    var buttonDown = $( '<a href="#">down</a>' );
+                    var buttonDown = $( '<a href="#"><i class="fa fa-angle-down"></i></a>' );
 
                     buttonDown.on( 'click', function () {
 
@@ -579,7 +388,7 @@ var Editor = ( function () {
 
                     } );
 
-                    var buttonBottom = $( '<a href="#">bottom</a>' );
+                    var buttonBottom = $( '<a href="#"><i class="fa fa-angle-double-down"></i></a>' );
 
                     buttonBottom.on( 'click', function () {
 
@@ -596,17 +405,7 @@ var Editor = ( function () {
 
                 if ( index > 0 ) {
 
-                    var buttonUp = $( '<a href="#">up</a>' );
-
-                    buttonUp.on( 'click', function () {
-
-                        stack.movePassToIndex( index, index - 1 );
-                        updateEnabledShadersList();
-                        return false;
-
-                    } );
-
-                    var buttonTop = $( '<a href="#">top</a>' );
+                    var buttonTop = $( '<a href="#"><i class="fa fa-angle-double-up"></a>' );
 
                     buttonTop.on( 'click', function () {
 
@@ -616,12 +415,22 @@ var Editor = ( function () {
 
                     } );
 
-                    $shaderControls.append( buttonTop );
+                    var buttonUp = $( '<a href="#"><i class="fa fa-angle-up"></i></a>' );
+
+                    buttonUp.on( 'click', function () {
+
+                        stack.movePassToIndex( index, index - 1 );
+                        updateEnabledShadersList();
+                        return false;
+
+                    } );
+
                     $shaderControls.append( buttonUp );
+                    $shaderControls.append( buttonTop );
 
                 }
 
-                var buttonDelete = $( '<a href="#">delete</a>' );
+                var buttonDelete = $( '<a href="#"><i class="fa fa-trash"></i></a>' );
 
                 buttonDelete.on( 'click', function () {
 
@@ -640,7 +449,7 @@ var Editor = ( function () {
 
                 }
 
-                addShaderParamsInputs(passItem.shaderName, $shaderParams);
+                addShaderParamsInputs( passItem.shaderName, $shaderParams );
 
                 $shadersList.append( $shaderItem );
 
@@ -648,46 +457,76 @@ var Editor = ( function () {
         }
     }
 
-    function addShaderParamsInputs(shaderName, $shaderParams) {
+    function addShaderParamsInputs( shaderName, $shaderParams ) {
 
-        var shader = new WAGNER[shaderName]();
+        var shader = new WAGNER[ shaderName ]();
 
-        if (shader && shader.params) {
+        if ( shader && shader.params ) {
 
-            console.log(shader.params);
-            addParamsInputs(shader.params, $shaderParams);
+            console.log( shader.params );
+            addParamsInputs( shader.params, $shaderParams );
 
         }
     }
 
-    function addParamsInputs(params, $parent) {
+    function addParamsInputs( params, $parent ) {
 
-        var $shaderParamValueInput;
+        var $shaderParamItem;
 
         for ( var paramName in params ) {
 
-                if ( params.hasOwnProperty( paramName ) ) {
+            if ( params.hasOwnProperty( paramName ) ) {
 
-                    var paramType = toType( params[ paramName ] );
+                var paramType = toType( params[ paramName ] );
 
-                    if ( paramType === 'number' ||
-                        paramType === 'boolean' ||
-                        paramType === 'string' ) {
+                if ( paramType === 'number' ||
+                    paramType === 'boolean' ||
+                    paramType === 'string' ) {
 
-                        $parent.append( '<li><div class="shader-param-name">' + paramName + '</div><input class="shader-param-value" value="' + params[ paramName ] + '"/></li>' );
-                        $shaderParamValueInput = $parent.find('input');
-                        $shaderParamValueInput.on('change', function (event) {
-                            console.log($(this).val(), params[ paramName ]);
-                        });
+                    $shaderParamItem = $( '<li class="shader-param" data-param="' + paramName + '"><div class="shader-param-name">' + paramName + '</div><input class="shader-param-value" value="' + params[ paramName ] + '"/></li>' );
+                    $parent.append( $shaderParamItem );
 
-                    } else if ( paramType === 'object' ) {
+                    $shaderParamItem.on( 'input', 'input.shader-param-value', function ( event ) {
 
-                        var $containerParam = $parent.append( '<li><ul>' + paramName + '</ul></li>' ).find('ul');
+                        console.log( 'this', $( this ) )
 
-                        addParamsInputs(params[ paramName ], $containerParam);
-                    }
+                        var passIndex = $( this ).closest( '.shader' ).index(),
+                            rootParam,
+                            editedParamName = $( this ).closest( '.shader-param' ).data( 'param' ),
+                            parentParamName = $( this ).closest( '.shader-param-parent' ).data( 'param' );
+
+                        console.log( 'parentParamName', parentParamName );
+                        // console.log('editing', editedParamName, $(this)[0].value, stack.passItems[passIndex]);
+                        rootParam = stack.passItems[ passIndex ].params;
+
+                        // get parent param if edited param in not on root of params object
+                        if ( parentParamName && rootParam[ parentParamName ] ) {
+
+                            rootParam = rootParam[ parentParamName ];
+                            console.log( 'params[' + parentParamName + '][' + editedParamName + '] = ' );
+
+                        } else {
+
+                            console.log( 'params[' + editedParamName + '] = ' );
+
+                        }
+
+                        rootParam[ editedParamName ] = $( this )[ 0 ].value;
+                        console.log( rootParam[ editedParamName ] );
+
+                        stack.updatePasses();
+
+                    } );
+
+                } else if ( paramType === 'object' ) {
+
+                    var $containerParam = $parent.append( '<li class="shader-param shader-param-parent" data-param="' + paramName + '"><div class="shader-param-name">' + paramName + '</div><ul class="shader-params"></ul></li>' ).find( 'ul' );
+
+                    console.log( 'subparam', paramName )
+                    addParamsInputs( params[ paramName ], $containerParam );
                 }
             }
+        }
 
     }
 

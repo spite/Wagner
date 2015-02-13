@@ -478,6 +478,19 @@ WAGNER.Stack.prototype.reverse = function () {
 WAGNER.Stack.prototype.updatePasses = function () {
 
     this.passes = this.shadersPool.getPasses( this.passItems );
+
+    // init default params for new passItems
+    this.passItems.forEach( function ( passItem, index ) {
+
+    	if (passItem.params === undefined) {
+
+    		passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+    		console.log('updatePasses', passItem, passItem.params);
+
+    	}
+
+    }.bind(this) );
+
 	console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
 
 };
@@ -491,7 +504,6 @@ WAGNER.Stack.prototype.getPasses = function () {
 
 
 
-
 WAGNER.ShadersPool = function () {
 
     this.availableShaders = [];
@@ -500,13 +512,14 @@ WAGNER.ShadersPool = function () {
 
 WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
 
+	var pass,
+		passes = [];
+
     this.availableShaders.forEach( function ( availableShader ) {
 
         availableShader.used = false;
 
     } );
-
-    var passes = [];
 
     if ( passItems ) {
 
@@ -514,7 +527,15 @@ WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
 
             if ( passItem.enabled ) {
 
-                passes.push( this.getShaderFromPool( passItem.shaderName ) );
+            	pass = this.getShaderFromPool( passItem.shaderName );
+
+            	if ( passItem.params ) {
+
+            		pass.params = this.extendParams(pass.params, passItem.params)
+
+            	}
+
+                passes.push( pass );
 
             }
 
@@ -566,6 +587,30 @@ WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName ) {
     }
 
 };
+
+
+WAGNER.ShadersPool.prototype.extendParams = function(target, source) {
+
+    var obj = {},
+        i = 0,
+        il = arguments.length,
+        key;
+
+    for (; i < il; i++) {
+
+        for (key in arguments[i]) {
+
+            if (arguments[i].hasOwnProperty(key)) {
+
+                obj[key] = arguments[i][key];
+
+            }
+        }
+    }
+
+    return obj;
+    
+}
 
 
 

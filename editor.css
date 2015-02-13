@@ -1,6 +1,6 @@
 body {
     color: #ffffff;
-    font-family: 'roboto condensed', tahoma;
+    font-family: 'Lato', sans-serif;
     font-size: 13px;
     text-align: left;
     font-weight: 100;
@@ -38,46 +38,135 @@ body {
 a {
     color: #b70000;
 }
-#shadersStack {
-    position: absolute;
-    right: 270px;
-    width: 300px;
-    top: 10px;
-    color: white;
-    border: 1px solid white;
-    border-radius: 4px;
-    padding: 10px 20px;
-    background-color: black;
-    text-decoration: none;
-}
-#shadersStack:hover #shadersStackList {
-    display: block;
-}
-#shadersStackList {
-    display: none;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-#shadersStackList li:hover, #shadersStackList li:active {
-    background-color: #111;
-}
-#shadersStackList li.disabled {
-    color: #777;
-}
-#shadersStackList a {
-    float: right;
-    margin: 0 4px;
-}
 #editor {
     position: fixed;
     display: block;
-    background: #efefef;
+    background: #fafafa;
     height: 100%;
     width: 480px;
     top: 0;
     right: 0;
 }
 #shaders-list {
-    color: #222;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.shader {
+    display: block;
+    min-height: 48px;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 48px;
+    background: #fff;
+    position: relative;
+    box-shadow: 0px 10px 18px -18px rgba(0, 0, 0, 0.2);
+    margin-bottom: 4px;
+    border-top: 1px dotted #eee;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader:hover .shader-name {
+    color: #b70000;
+}
+.shader:hover .shader-name i {
+    margin-right: 12px;
+}
+.shader .shader-name {
+    padding-left: 12px;
+    cursor: -webkit-grab;
+    cursor: grab;
+    user-select: none;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader .shader-name i {
+    font-size: 22px;
+    margin-right: 6px;
+    color: #333;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader .shader-name:active {
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
+}
+.shader-controls {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.shader-controls a {
+    display: inline-block;
+    height: 48px;
+    min-width: 48px;
+    text-align: center;
+    background: #fff;
+    color: #b70000;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader-controls a:hover {
+    color: #fff;
+    background: #b70000;
+}
+.shader-params {
+    font-size: 16px;
+    line-height: 40px;
+    list-style: none;
+    padding-left: 0;
+    font-weight: 400;
+    text-transform: capitalize;
+    border-top: 1px dotted #eee;
+}
+.shader-params .shader-param {
+    background: #fff;
+    padding: 0 0 0 24px;
+    min-height: 40px;
+    position: relative;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader-params .shader-param:hover {
+    background: #f5f5f5;
+}
+.shader-params .shader-param:before {
+    background: #eee;
+    content: " ";
+    display: block;
+    width: 12px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader-params .shader-param:hover:before {
+    background: #b70000;
+}
+.shader-params .shader-param ul {
+    list-style: none;
+    padding: 0;
+}
+.shader-param .shader-param-name {
+    display: inline-block;
+}
+.shader-param .shader-param-value {
+    display: inline-block;
+    margin-right: 24px;
+    height: 24px;
+    line-height: 24px;
+    margin-top: 8px;
+    width: 54px;
+    float: right;
+    padding: 0;
+    font-size: 16px;
+    border: 0;
+    font-family: 'Lato', sans-serif;
+    font-weight: bold;
+    text-align: center;
 }
