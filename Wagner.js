@@ -10,8 +10,11 @@ WAGNER.vertexShadersPath = './vertex-shaders';
 WAGNER.fragmentShadersPath = './fragment-shaders';
 WAGNER.assetsPath = './assets';
 
+WAGNER.basicVs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }';
+WAGNER.copyFs = 'varying vec2 vUv; uniform sampler2D tInput; void main() {gl_FragColor = texture2D( tInput, vUv );}';
+
 WAGNER.log = function() {
-	//console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
+	// console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
 };
 
 WAGNER.Composer = function( renderer, settings ) {
@@ -258,7 +261,7 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 		tInput: { type: 't', value: new THREE.Texture(), default: true }
 	};
 
-  var uniformType, uniformName, arraySize;
+var uniformType, uniformName, arraySize;
 
 	while( ( matches = regExp.exec( fragmentShaderCode ) ) !== null) {
 		if( matches.index === regExp.lastIndex) {
@@ -318,7 +321,7 @@ WAGNER.Pass = function() {
 WAGNER.Pass.prototype.loadShader = function( id, c ) {
 
 	var self = this;
-	var vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }';
+	var vs = WAGNER.basicVs;
 	WAGNER.loadShader( WAGNER.fragmentShadersPath + '/' + id, function( fs ) {
 		self.shader = WAGNER.processShader( vs, fs );
 		//self.mapUniforms( self.shader.uniforms );
@@ -380,7 +383,9 @@ WAGNER.CopyPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'CopyPass constructor' );
-	this.loadShader( 'copy-fs.glsl' );
+	var fs = WAGNER.copyFs;
+	var vs = WAGNER.basicVs;
+	this.shader = WAGNER.processShader( vs, fs );
 
 };
 
@@ -1337,16 +1342,17 @@ WAGNER.DOFPass.prototype.run = function( c ) {
 
 }
 
-//amd support
-if (typeof exports !== 'undefined') {
-	if (typeof module !== 'undefined' && module.exports) {
-		exports = module.exports = WAGNER;
+window.WAGNER = WAGNER;
+
+	if (typeof exports !== 'undefined') {
+		if (typeof module !== 'undefined' && module.exports) {
+			exports = module.exports = WAGNER;
+		}
+		exports.WAGNER = WAGNER;
+	} else if (typeof define !== 'undefined' && define.amd) {
+		define(WAGNER);
+	} else {
+		root.WAGNER = WAGNER;
 	}
-	exports.WAGNER = WAGNER;
-} else if (typeof define !== 'undefined' && define.amd) {
-	define(WAGNER);
-} else {
-	root.WAGNER = WAGNER;
-}
 
 }).call(this);
