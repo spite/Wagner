@@ -427,16 +427,17 @@ WAGNER.Stack = function ( shadersPool ) {
 
 };
 
-WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, index ) {
+WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, params, index ) {
 
-    var length;
+    var length,
+    	passItem = {
+	        shaderName: shaderName,
+	        enabled: enabled || false
+	    };
 
-    var stackItem = {
-        shaderName: shaderName,
-        enabled: enabled || false
-    }
+	//todo: use and store params values
 
-    this.passItems.push( stackItem );
+    this.passItems.push( passItem );
     length = this.passItems.length;
     
     this.updatePasses();
@@ -457,6 +458,26 @@ WAGNER.Stack.prototype.removePass = function ( index ) {
 
     this.passItems.splice(index, 1);
     this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.enablePass = function ( index ) {
+
+    this.passItems[ index ].enabled = true;
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.disablePass = function ( index ) {
+
+    this.passItems[ index ].enabled = false;
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.isPassEnabled = function ( index ) {
+
+    return this.passItems[ index ].enabled;
 
 };
 
@@ -485,13 +506,13 @@ WAGNER.Stack.prototype.updatePasses = function () {
     	if (passItem.params === undefined) {
 
     		passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
-    		console.log('updatePasses', passItem, passItem.params);
+    		// console.log('updatePasses', passItem, passItem.params);
 
     	}
 
     }.bind(this) );
 
-	console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
+	// console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
 
 };
 

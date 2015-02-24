@@ -146,56 +146,33 @@ function init() {
 
     window.addEventListener( 'resize', onWindowResize, false );
 
-    var useTeapot = false;
 
-    if ( useTeapot ) {
+    // model = new THREE.Mesh( 
+    //     new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
+    //     modelMaterial
+    // );
+    // model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
+    // model.material.map.repeat.set( 8, 2 );
+    // model.scale.set( 4, 4,4 );
 
-        var loader = new THREE.JSONLoader();
-        loader.load( 'assets/models/LeePerrySmith.js', function ( data ) {
-            data.computeCentroids();
-            data.computeFaceNormals();
-            data.computeVertexNormals();
-            THREE.GeometryUtils.center( data );
-            model = new THREE.Mesh(
-                data,
-                modelMaterial
-            );
-            var scale = 100;
-            model.scale.set( scale, scale, scale );
-            model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
-            model.material.map.repeat.set( 4, 400 );
-            scene.add( model );
-        } );
-
-    } else {
-
-        /*model = new THREE.Mesh( 
-            new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
-            modelMaterial
-        );
-        model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
-        model.material.map.repeat.set( 8, 2 );
-        model.scale.set( 4, 4,4 );*/
-
-        var s = new THREE.CubeGeometry( 10, 10, 10, 1, 1, 1 );
-        //var s = new THREE.IcosahedronGeometry( 5, 3 );
-        var g = new THREE.Geometry();
-        var r = 2000;
-        for ( var j = 0; j < 100; j++ ) {
-            var m = new THREE.Mesh( s, modelMaterial );
-            m.rotation.set( Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI );
-            m.position.set( ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r );
-            var scale = 10 + Math.random() * 20;
-            m.scale.set( scale, scale, scale );
-            THREE.GeometryUtils.merge( g, m );
-        }
-        model = new THREE.Mesh( g, modelMaterial );
-        model.castShadow = true;
-        model.receiveShadow = true;
-
-        scene.add( model );
-
+    var s = new THREE.CubeGeometry( 10, 10, 10, 1, 1, 1 );
+    //var s = new THREE.IcosahedronGeometry( 5, 3 );
+    var g = new THREE.Geometry();
+    var r = 2000;
+    for ( var j = 0; j < 100; j++ ) {
+        var m = new THREE.Mesh( s, modelMaterial );
+        m.rotation.set( Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI );
+        m.position.set( ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r, ( .5 - Math.random() ) * r );
+        var scale = 10 + Math.random() * 20;
+        m.scale.set( scale, scale, scale );
+        THREE.GeometryUtils.merge( g, m );
     }
+    model = new THREE.Mesh( g, modelMaterial );
+    model.castShadow = true;
+    model.receiveShadow = true;
+
+    scene.add( model );
+
 
     var SHADOW_MAP_WIDTH = 2048,
         SHADOW_MAP_HEIGHT = 1024;
@@ -243,7 +220,7 @@ var tTexture;
 function onWindowResize() {
 
     var s = 1,
-        w = window.innerWidth,
+        w = window.innerWidth - 480,
         h = window.innerHeight;
 
     renderer.setSize( s * w, s * h );
@@ -318,10 +295,6 @@ function toType( obj ) {
 
 
 
-
-
-
-
 var Editor = ( function () {
 
     var $addShaderInput = $( '#add-shader-input' ),
@@ -364,7 +337,9 @@ var Editor = ( function () {
 
         var $shaderItem,
             $shaderControls,
-            $shaderParams;
+            $shaderVisibilityControl,
+            $shaderParams,
+            shaderEnabled;
 
         $shadersList.empty();
 
@@ -372,15 +347,45 @@ var Editor = ( function () {
 
             stack.passItems.forEach( function ( passItem, index ) {
 
-                $shaderItem = $( '<li class="shader"><span class="shader-name"><i class="fa fa-angle-right"></i>' + passItem.shaderName + '</span><div class="shader-controls"></div><ul class="shader-params"></ul></li>' );
+                $shaderItem = $( '<li class="shader"><span class="shader-name"><i class="fa fa-angle-right"></i>' + passItem.shaderName + '</span><div class="shader-controls"><a class="shader-control-visibility" href="#"><i class="fa fa-eye"></i></a></div><ul class="shader-params"></ul></li>' );
                 $shaderControls = $shaderItem.find( '.shader-controls' );
                 $shaderParams = $shaderItem.find( '.shader-params' );
 
+
+                $shaderVisibilityControl = $shaderControls.find('.shader-control-visibility');
+                shaderEnabled = stack.isPassEnabled( index );
+
+                if ( !shaderEnabled ) {
+
+                    $shaderVisibilityControl.addClass('active').find('i').removeClass('fa-eye').addClass('fa-eye-slash');
+
+                }
+
+                $shaderVisibilityControl.on( 'click', function () {
+
+                    if ( !$(this).hasClass('active') ) {
+
+                        stack.disablePass( index );
+
+                    } else {
+
+                        stack.enablePass( index );
+
+                    }
+
+                    updateEnabledShadersList();
+                    return false;
+
+                } );
+
+
                 if ( index < stack.passItems.length - 1 ) {
 
-                    var buttonDown = $( '<a href="#"><i class="fa fa-angle-down"></i></a>' );
+                    var buttonDown = $( '<a href="#" class="shader-control-down"><i class="fa fa-angle-down"></i></a>' );
 
                     buttonDown.on( 'click', function () {
+
+                        console.log('down');
 
                         stack.movePassToIndex( index, index + 1 );
                         updateEnabledShadersList();
@@ -388,7 +393,7 @@ var Editor = ( function () {
 
                     } );
 
-                    var buttonBottom = $( '<a href="#"><i class="fa fa-angle-double-down"></i></a>' );
+                    var buttonBottom = $( '<a href="#" class="shader-control-bottom"><i class="fa fa-angle-double-down"></i></a>' );
 
                     buttonBottom.on( 'click', function () {
 
@@ -405,7 +410,7 @@ var Editor = ( function () {
 
                 if ( index > 0 ) {
 
-                    var buttonTop = $( '<a href="#"><i class="fa fa-angle-double-up"></a>' );
+                    var buttonTop = $( '<a href="#" class="shader-control-top"><i class="fa fa-angle-double-up"></a>' );
 
                     buttonTop.on( 'click', function () {
 
@@ -415,7 +420,7 @@ var Editor = ( function () {
 
                     } );
 
-                    var buttonUp = $( '<a href="#"><i class="fa fa-angle-up"></i></a>' );
+                    var buttonUp = $( '<a href="#" class="shader-control-up"><i class="fa fa-angle-up"></i></a>' );
 
                     buttonUp.on( 'click', function () {
 
@@ -430,7 +435,7 @@ var Editor = ( function () {
 
                 }
 
-                var buttonDelete = $( '<a href="#"><i class="fa fa-trash"></i></a>' );
+                var buttonDelete = $( '<a href="#" class="shader-control-delete"><i class="fa fa-trash"></i></a>' );
 
                 buttonDelete.on( 'click', function () {
 
@@ -459,11 +464,11 @@ var Editor = ( function () {
 
     function addShaderParamsInputs( shaderName, $shaderParams ) {
 
-        var shader = new WAGNER[ shaderName ]();
+        var shader = new WAGNER[ shaderName ](); //todo: get params from stack passItem 
 
         if ( shader && shader.params ) {
 
-            console.log( shader.params );
+            // console.log( shader.params );
             addParamsInputs( shader.params, $shaderParams );
 
         }
@@ -492,9 +497,9 @@ var Editor = ( function () {
                             rootParam,
                             editedParamName = $( this ).closest( '.shader-param' ).data( 'param' ),
                             parentParamName = $( this ).closest( '.shader-param-parent' ).data( 'param' ),
-                            paramValue = $( this ).hasClass('param-value-boolean') ? ($( this )[ 0 ].value === 'true') : $( this )[ 0 ].value;
+                            paramValue = $( this ).hasClass( 'param-value-boolean' ) ? ( $( this )[ 0 ].value === 'true' ) : $( this )[ 0 ].value;
 
-                        console.log('paramType', paramType);
+                        console.log( 'paramType', paramType );
 
                         // console.log( 'parentParamName', parentParamName );
                         // console.log('editing', editedParamName, $(this)[0].value, stack.passItems[passIndex]);
@@ -504,34 +509,32 @@ var Editor = ( function () {
                         if ( parentParamName && rootParam[ parentParamName ] ) {
 
                             rootParam = rootParam[ parentParamName ];
-                            console.log( 'params[' + parentParamName + '][' + editedParamName + '] = ' );
 
                         } else {
 
-                            console.log( 'params[' + editedParamName + '] = ' );
 
                         }
 
                         rootParam[ editedParamName ] = paramValue;
-                        console.log( rootParam[ editedParamName ] );
+                        // console.log( rootParam[ editedParamName ] );
 
                         stack.updatePasses();
 
                     } );
 
-                    if (paramType === 'boolean') {
+                    if ( paramType === 'boolean' ) {
 
-                        $shaderParamItem.find('input.shader-param-value.param-value-boolean').prop('readonly', true);;
+                        $shaderParamItem.find( 'input.shader-param-value.param-value-boolean' ).prop( 'readonly', true );;
 
                         $shaderParamItem.on( 'click', 'input.shader-param-value.param-value-boolean', function ( event ) {
 
                             if ( $( this ).val() === 'true' ) {
 
-                                $( this ).val('false').trigger( 'input' );
+                                $( this ).val( 'false' ).trigger( 'input' );
 
                             } else {
 
-                                $( this ).val('true').trigger( 'input' );
+                                $( this ).val( 'true' ).trigger( 'input' );
 
                             }
 

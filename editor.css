@@ -17,9 +17,8 @@ body {
   background: #111;
   color: #fefefe;
 }
-#container canvas {
-    width: 100%;
-    height: 100%;
+#container {
+
 }
 #fullscreenBtn {
     position: absolute;
@@ -37,7 +36,7 @@ body {
     background-color: white;
 }
 a {
-    color: #b70000;
+    color: #ca2f2f;
 }
 #editor {
     position: fixed;
@@ -48,6 +47,64 @@ a {
     top: 0;
     right: 0;
     box-shadow: -5px 0px 51px 2px rgba(0, 0, 0, 0.8);
+}
+#shader-select-container {
+    height: 58px;
+    position: relative;
+    background-color: #ca2f2f;
+    margin-bottom: 4px;
+    box-shadow: 0px 10px 18px -18px rgba(0, 0, 0, 0.2);
+}
+#add-shader-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 56px;
+    line-height: 56px;
+    width: 368px;
+    border: none;
+    outline: none;
+    padding: 0 16px;
+    font-size: 18px;
+    font-weight: 400;
+    font-family: 'Lato', sans-serif;
+}
+#add-shader-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    height: 56px;
+    width: 112px;
+    line-height: 56px;
+    text-align: center;
+    font-size: 18px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: #ca2f2f;
+    cursor: pointer;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+#add-shader-button:hover {
+    background-color: #8f1919;
+}
+#add-shader-button:active {
+    color: #ca2f2f;
+    background-color: #fff;
+}
+#shaders-list-container {
+    position: absolute;
+    width: 100%;
+    top: 62px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: auto;
 }
 #shaders-list {
     color: #333;
@@ -71,7 +128,7 @@ a {
     transition: all 0.15s ease-in-out;
 }
 .shader:hover .shader-name {
-    color: #b70000;
+    color: #ca2f2f;
 }
 .shader:hover .shader-name i {
     margin-right: 12px;
@@ -108,13 +165,22 @@ a {
     min-width: 48px;
     text-align: center;
     background: #fff;
-    color: #b70000;
+    color: #ca2f2f;
     -webkit-transition: all 0.15s ease-in-out;
     transition: all 0.15s ease-in-out;
 }
-.shader-controls a:hover {
+.shader-controls a:active {
     color: #fff;
-    background: #b70000;
+    background-color: #8f1919;
+}
+.shader-controls a.active {
+    color: #fff;
+    background-color: #e04d4d;
+}
+.shader-controls a:hover,
+.shader-controls a.active:hover {
+    color: #fff;
+    background: #ca2f2f;
 }
 .shader-params {
     font-size: 16px;
@@ -149,7 +215,7 @@ a {
     transition: all 0.15s ease-in-out;
 }
 .shader-params .shader-param:hover:before {
-    background: #b70000;
+    background: #ca2f2f;
 }
 .shader-params .shader-param ul {
     list-style: none;
@@ -175,8 +241,9 @@ a {
     -webkit-transition: all 0.15s ease-in-out;
     transition: all 0.15s ease-in-out;
 }
-.shader-param .shader-param-value:hover {
-    background: #b70000;
+.shader-param .shader-param-value:hover,
+.shader-params .shader-param:hover .shader-param-value:hover {
+    background: #ca2f2f;
     color: #fff;
 }
 .shader-param .shader-param-value.param-value-boolean {
@@ -184,7 +251,12 @@ a {
     user-select: none;
     -webkit-user-select: none;
 }
-.shader-param .shader-param-value.param-value-boolean:active {
+.shader-param .shader-param-value.param-value-boolean:active,
+.shader-params .shader-param .shader-param-value.param-value-boolean:active {
     background: #fff;
-    color: #b70000;
+    color: #ca2f2f;
 }
+.shader-params .shader-param:hover > .shader-param-value {
+    background: #dedede;
+}
+
