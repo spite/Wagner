@@ -9,6 +9,14 @@ body {
     margin: 0px;
     overflow: hidden;
 }
+::selection {
+  background: #111;
+  color: #fefefe;
+}
+::-moz-selection {
+  background: #111;
+  color: #fefefe;
+}
 #container canvas {
     width: 100%;
     height: 100%;
@@ -28,13 +36,6 @@ body {
     color: black;
     background-color: white;
 }
-#about {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
-    background-color: #000;
-    padding: 10px;
-}
 a {
     color: #b70000;
 }
@@ -46,6 +47,7 @@ a {
     width: 480px;
     top: 0;
     right: 0;
+    box-shadow: -5px 0px 51px 2px rgba(0, 0, 0, 0.8);
 }
 #shaders-list {
     color: #333;
@@ -79,6 +81,7 @@ a {
     cursor: -webkit-grab;
     cursor: grab;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-transition: all 0.15s ease-in-out;
     transition: all 0.15s ease-in-out;
 }
@@ -157,11 +160,11 @@ a {
 }
 .shader-param .shader-param-value {
     display: inline-block;
-    margin-right: 24px;
-    height: 24px;
-    line-height: 24px;
-    margin-top: 8px;
-    width: 54px;
+    margin: 0;
+    line-height: 40px;
+    height: 40px;
+    width: 80px;
+    outline: none;
     float: right;
     padding: 0;
     font-size: 16px;
@@ -169,4 +172,19 @@ a {
     font-family: 'Lato', sans-serif;
     font-weight: bold;
     text-align: center;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
+}
+.shader-param .shader-param-value:hover {
+    background: #b70000;
+    color: #fff;
+}
+.shader-param .shader-param-value.param-value-boolean {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.shader-param .shader-param-value.param-value-boolean:active {
+    background: #fff;
+    color: #b70000;
 }

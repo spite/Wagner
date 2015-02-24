@@ -354,6 +354,7 @@ var Editor = ( function () {
             // handle: ".shader-name", 
             onEnd: function ( event ) {
                 stack.movePassToIndex( event.oldIndex, event.newIndex );
+                updateEnabledShadersList();
             }
         } );
 
@@ -381,7 +382,6 @@ var Editor = ( function () {
 
                     buttonDown.on( 'click', function () {
 
-                        console.log( 'down', index )
                         stack.movePassToIndex( index, index + 1 );
                         updateEnabledShadersList();
                         return false;
@@ -483,19 +483,20 @@ var Editor = ( function () {
                     paramType === 'boolean' ||
                     paramType === 'string' ) {
 
-                    $shaderParamItem = $( '<li class="shader-param" data-param="' + paramName + '"><div class="shader-param-name">' + paramName + '</div><input class="shader-param-value" value="' + params[ paramName ] + '"/></li>' );
+                    $shaderParamItem = $( '<li class="shader-param" data-param="' + paramName + '"><div class="shader-param-name">' + paramName + '</div><input class="shader-param-value param-value-' + paramType + '" value="' + params[ paramName ] + '"/></li>' );
                     $parent.append( $shaderParamItem );
 
                     $shaderParamItem.on( 'input', 'input.shader-param-value', function ( event ) {
 
-                        console.log( 'this', $( this ) )
-
                         var passIndex = $( this ).closest( '.shader' ).index(),
                             rootParam,
                             editedParamName = $( this ).closest( '.shader-param' ).data( 'param' ),
-                            parentParamName = $( this ).closest( '.shader-param-parent' ).data( 'param' );
+                            parentParamName = $( this ).closest( '.shader-param-parent' ).data( 'param' ),
+                            paramValue = $( this ).hasClass('param-value-boolean') ? ($( this )[ 0 ].value === 'true') : $( this )[ 0 ].value;
 
-                        console.log( 'parentParamName', parentParamName );
+                        console.log('paramType', paramType);
+
+                        // console.log( 'parentParamName', parentParamName );
                         // console.log('editing', editedParamName, $(this)[0].value, stack.passItems[passIndex]);
                         rootParam = stack.passItems[ passIndex ].params;
 
@@ -511,12 +512,32 @@ var Editor = ( function () {
 
                         }
 
-                        rootParam[ editedParamName ] = $( this )[ 0 ].value;
+                        rootParam[ editedParamName ] = paramValue;
                         console.log( rootParam[ editedParamName ] );
 
                         stack.updatePasses();
 
                     } );
+
+                    if (paramType === 'boolean') {
+
+                        $shaderParamItem.find('input.shader-param-value.param-value-boolean').prop('readonly', true);;
+
+                        $shaderParamItem.on( 'click', 'input.shader-param-value.param-value-boolean', function ( event ) {
+
+                            if ( $( this ).val() === 'true' ) {
+
+                                $( this ).val('false').trigger( 'input' );
+
+                            } else {
+
+                                $( this ).val('true').trigger( 'input' );
+
+                            }
+
+                        } );
+
+                    }
 
                 } else if ( paramType === 'object' ) {
 
