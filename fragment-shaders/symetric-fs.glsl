@@ -5,11 +5,7 @@ uniform float yReverse;
 uniform float xMirror;
 uniform float yMirror;
 uniform float angle;
-
-uniform float aspectRatio;
 uniform vec2 mirrorCenter;
-
-
 vec2 nvUv;
 
 void main() {
@@ -29,7 +25,6 @@ void main() {
                 nvUv.x = nvUv.x - (0.5 - mirrorCenter.x);
             }
         }
-
     }
 
     else if(xMirror == 1.) {
@@ -47,7 +42,6 @@ void main() {
         nvUv.y = (1.0 - vUv.y );
 
         if(yMirror == 1.) {
-
             if(vUv.y < 0.5) {
                 nvUv.y = 1.0 - (nvUv.y) - (0.5 - mirrorCenter.y ) ;
             }
@@ -55,7 +49,6 @@ void main() {
                 nvUv.y = nvUv.y - (0.5 - mirrorCenter.y);
             }
         }
-
     }
 
     else if(yMirror == 1.) {
@@ -72,7 +65,7 @@ void main() {
     float sin_factor = sin(angle);
     float cos_factor = cos(angle);
     vec2 origin = vec2(0.5 ,0.5);
-
+    
     vec2 temp = (nvUv - origin);
 
     temp = temp * mat2(cos_factor, sin_factor, -sin_factor, cos_factor);
@@ -81,5 +74,4 @@ void main() {
 
 	gl_FragColor = texture2D( tInput, nvUv );
 	gl_FragColor.rgb = gl_FragColor.rgb;
-
 }
