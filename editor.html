@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Wagner - Minefield!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <link href="editor.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+</head>
+
+<body>
+
+    <div id="container"></div>
+    <a href="#" id="fullscreenBtn">Go fullscreen</a>
+    <div id="editor">
+        <div id="shader-select-container">
+            <select id="add-shader-input"></select>
+            <button id="add-shader-button">Add Pass</button>
+        </div>
+        <div id="shaders-list-container">
+            <ul id="shaders-list"></ul>
+        </div>
+    </div>
+
+    <script src="js/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.4/zepto.min.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+    <script src="js/Sortable.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <!--<script src="js/OculusRiftEffect.js"></script>-->
+    <script src="http://spite.github.io/rstats/rStats.js" ></script>
+    <script src="http://spite.github.io/rstats/rStats.extras.js" ></script>
+    <script src="Wagner.js"></script>
+    <script src="Wagner.base.js"></script>
+    <!--<script src="Wagner.experimental.js"></script>-->
+    <script src="ShaderLoader.js"></script>
+    <script src="js/debugTools.js"></script>
+    <script src="editor.js"></script>
+
+
+</body>
+
+</html>

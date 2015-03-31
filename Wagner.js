@@ -111,24 +111,42 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 
 WAGNER.Composer.prototype.pass = function( pass ) {
 
-	if( typeof pass === 'string' ) {
-		this.quad.material = this.passes[ pass ];
-	}
-	if( pass instanceof THREE.ShaderMaterial ) {
-		this.quad.material = pass;
-	}
-	if( pass instanceof WAGNER.Pass ) {
-		if( !pass.isLoaded() ) return;
-		pass.run( this );
-		return;
+	if( pass instanceof WAGNER.Stack ) {
+
+		this.passStack(pass);
+
+	} else {
+
+		if( typeof pass === 'string' ) {
+			this.quad.material = this.passes[ pass ];
+		}
+		if( pass instanceof THREE.ShaderMaterial ) {
+			this.quad.material = pass;
+		}
+		if( pass instanceof WAGNER.Pass ) {
+			if( !pass.isLoaded() ) return;
+			pass.run( this );
+			return;
+		}
+
+		if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
+		
+		this.quad.material.uniforms.resolution.value.set( this.width, this.height );
+		this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
+		this.renderer.render( this.scene, this.camera, this.write, false );
+		this.swapBuffers();
+
 	}
 
-	if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
-	
-	this.quad.material.uniforms.resolution.value.set( this.width, this.height );
-	this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
-	this.renderer.render( this.scene, this.camera, this.write, false );
-	this.swapBuffers();
+};
+
+WAGNER.Composer.prototype.passStack = function( stack ) {
+
+	stack.getPasses().forEach( function ( pass ) {
+
+		this.pass( pass );
+
+	}.bind(this));
 
 };
 
@@ -398,6 +416,226 @@ WAGNER.GenericPass = function( fragmentShaderSource, c ) {
 }
 
 WAGNER.GenericPass.prototype = Object.create( WAGNER.Pass.prototype );
+
+
+
+WAGNER.Stack = function ( shadersPool ) {
+
+    this.passItems = [];
+    this.shadersPool = shadersPool;
+    this.passes = [];
+
+};
+
+WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, params, index ) {
+
+    var length,
+    	passItem = {
+	        shaderName: shaderName,
+	        enabled: enabled || false
+	    };
+
+	//todo: use and store params values
+
+    this.passItems.push( passItem );
+    length = this.passItems.length;
+    
+    this.updatePasses();
+
+    if ( index ) {
+
+        return this.movePassToIndex( this.passItems[ length ], index );
+
+    } else {
+
+        return length - 1;
+
+    }
+
+};
+
+WAGNER.Stack.prototype.removePass = function ( index ) {
+
+    this.passItems.splice(index, 1);
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.enablePass = function ( index ) {
+
+    this.passItems[ index ].enabled = true;
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.disablePass = function ( index ) {
+
+    this.passItems[ index ].enabled = false;
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.isPassEnabled = function ( index ) {
+
+    return this.passItems[ index ].enabled;
+
+};
+
+WAGNER.Stack.prototype.movePassToIndex = function ( index, destIndex ) {
+
+    this.passItems.splice( destIndex, 0, this.passItems.splice( index, 1 )[ 0 ] );
+    this.updatePasses();
+    return destIndex; //TODO: check if destIndex is final index
+
+};
+
+WAGNER.Stack.prototype.reverse = function () {
+
+    this.passItems.reverse();
+    this.updatePasses();
+
+};
+
+WAGNER.Stack.prototype.updatePasses = function () {
+
+    this.passes = this.shadersPool.getPasses( this.passItems );
+
+    // init default params for new passItems
+    this.passItems.forEach( function ( passItem, index ) {
+
+    	if (passItem.params === undefined) {
+
+    		passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+    		// console.log('updatePasses', passItem, passItem.params);
+
+    	}
+
+    }.bind(this) );
+
+	// console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
+
+};
+
+WAGNER.Stack.prototype.getPasses = function () {
+
+    return this.passes;
+
+};
+
+
+
+
+WAGNER.ShadersPool = function () {
+
+    this.availableShaders = [];
+
+};
+
+WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
+
+	var pass,
+		passes = [];
+
+    this.availableShaders.forEach( function ( availableShader ) {
+
+        availableShader.used = false;
+
+    } );
+
+    if ( passItems ) {
+
+        passItems.forEach( function ( passItem, index ) {
+
+            if ( passItem.enabled ) {
+
+            	pass = this.getShaderFromPool( passItem.shaderName );
+
+            	if ( passItem.params ) {
+
+            		pass.params = this.extendParams(pass.params, passItem.params)
+
+            	}
+
+                passes.push( pass );
+
+            }
+
+        }.bind( this ) );
+
+    }
+
+    return passes;
+
+};
+
+WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName ) {
+
+    var pass,
+        shaderItem;
+
+    if ( shaderName && WAGNER[ shaderName ] ) {
+
+    	for (var i = this.availableShaders.length - 1; i >= 0; i--) {
+
+    		shaderItem = this.availableShaders[i];
+
+            if ( !shaderItem.used && shaderItem.name === shaderName ) {
+
+                shaderItem.used = true;
+                pass = shaderItem.pass;
+                break;
+
+            }
+    		
+    	};
+
+        if ( !pass ) {
+
+            pass = new WAGNER[ shaderName ]();
+
+            shaderItem = {
+                pass: pass,
+                name: shaderName,
+                used: true
+            };
+
+            this.availableShaders.push( shaderItem );
+
+        }
+
+        return pass;
+
+    }
+
+};
+
+
+WAGNER.ShadersPool.prototype.extendParams = function(target, source) {
+
+    var obj = {},
+        i = 0,
+        il = arguments.length,
+        key;
+
+    for (; i < il; i++) {
+
+        for (key in arguments[i]) {
+
+            if (arguments[i].hasOwnProperty(key)) {
+
+                obj[key] = arguments[i][key];
+
+            }
+        }
+    }
+
+    return obj;
+    
+}
+
+
+
+
 
 window.WAGNER = WAGNER;
 })();
