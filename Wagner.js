@@ -104,7 +104,7 @@ WAGNER.Composer.prototype.toTexture = function( t ) {
 	if( this.copyPass.isLoaded() ) {
 		this.quad.material = this.copyPass.shader;
 		this.quad.material.uniforms.tInput.value = this.read;
-		this.renderer.render( this.scene, this.camera, t, true );
+		this.renderer.render( this.scene, this.camera, t, false );
 	}
 
 };
