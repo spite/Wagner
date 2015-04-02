@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Wagner - Minefield!</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			color: #ffffff;
+			font-family: 'roboto condensed', tahoma;
+			font-size: 13px;
+			text-align: left;
+			font-weight: 100;
+			background-color: #111;
+			sbackground-image: url(escheresque_ste.png);
+			margin: 0px;
+			overflow: hidden;
+		}
+
+		#container canvas {
+			width: 100%;
+			height: 100%;
+		}
+
+		#fullscreenBtn {
+			position: absolute;
+			left: 10px;
+			top: 60px;
+			color: white;
+			border: 1px solid white;
+			border-radius: 4px;
+			padding: 10px 20px;
+			background-color: black;
+			text-decoration: none;
+		}
+
+		#fullscreenBtn:hover {
+			color: black;
+			background-color: white;
+		}
+
+		#about {
+			position: absolute;
+			left: 10px;
+			top: 10px;
+			background-color: #000;
+			padding: 10px;
+		}
+
+		a {
+			color: #b70000;
+		}
+	</style>
+	<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
+</head>
+<body>
+
+<div id="container"></div>
+<a href="#" id="fullscreenBtn">Go fullscreen</a>
+
+<div id="about"><b>Wagner</b> GPGPU Velocity + Position Pass</div>
+
+<script src="../../js/three.min.js"></script>
+<!--<script src="http://spite.github.io/rstats/rStats.js" ></script>
+<script src="http://spite.github.io/rstats/rStats.extras.js" ></script>-->
+<script src="../../Wagner.js"></script>
+<script src="../../Wagner.base.js"></script>
+<!--<script src="Wagner.experimental.js"></script>-->
+<script src="../../js/OrbitControls.js"></script>
+<script src="../../ShaderLoader.js"></script>
+<script src="../../js/debugTools.js"></script>
+
+<script src="js/main.js"></script>
+<script src="js/WagnerPositionPass.js"></script>
+<script src="js/WagnerVelocityPass.js"></script>
+
+<script id="vs-particles" type="x-shader/x-vertex">
+
+	uniform sampler2D texture;
+	uniform float textureSize;
+	uniform vec2 windowSize;
+	uniform float pointSize;
+
+	void main() {
+
+	vec2 uv = position.xy + vec2( 0.5 / textureSize, 0.5 / textureSize );
+
+	vec3 positionSimulation = texture2D( texture, uv ).rgb ;
+
+	gl_PointSize = pointSize;
+
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(positionSimulation,1.0);
+
+	}
+
+</script>
+
+<script id="fs-particles" type="x-shader/x-fragment">
+
+	void main() {
+
+	gl_FragColor = vec4( 1.0,1.0,1.0,1.0 );
+
+	}
+
+</script>
+
+<script>
+
+	WAGNER.vertexShadersPath = 'vertex-shaders';
+	WAGNER.fragmentShadersPath = 'fragment-shaders';
+
+	function initPass() {
+
+		var settings = {
+			useRGBA: false,
+			wrapS: THREE.RepeatWrapping,
+			wrapT: THREE.RepeatWrapping,
+			minFilter: THREE.NearestFilter,
+			magFilter: THREE.NearestFilter,
+			format: THREE.RGBFormat,
+			type: THREE.FloatType,
+			stencilBuffer: false
+		};
+
+		composerVel = new WAGNER.Composer( renderer, settings );
+		composerPos = new WAGNER.Composer( renderer, settings );
+		resizePass();
+		composerPos.reset();
+		composerVel.reset();
+
+		velPass = new WAGNER.VelocityPass();
+		velPass.params.limitToBounce = limitToBounce * 0.5;
+		velPass.params.initialData = getInitialVelData();
+
+		posPass = new WAGNER.PositionPass();
+		posPass.params.initialData = getInitialPosData();
+
+	}
+
+	function getInitialVelData() {
+
+		var width = numParticles;
+		var height = numParticles;
+		var total = width * height;
+
+		var data = new Float32Array( total * 3 );
+
+		for ( var i = 0; i < (total * 3); i += 3 ) {
+
+			data[i + 0] = Math.random() * 2 - 1;
+			data[i + 1] = Math.random() * 2 - 1;
+			data[i + 2] = Math.random() * 2 - 1;
+		}
+
+		var texture = new THREE.DataTexture( data, width, height, THREE.RGBFormat, THREE.FloatType );
+		texture.minFilter = THREE.NearestFilter;
+		texture.magFilter = THREE.NearestFilter;
+		texture.generateMipmaps = false;
+		texture.needsUpdate = true;
+
+		return texture;
+
+	}
+
+	function getInitialPosData() {
+
+		var width = numParticles;
+		var height = numParticles;
+		var total = width * height;
+		var data = new Float32Array( total * 3 );
+
+		for ( var i = 0; i < (total * 3); i += 3 ) {
+			data[i + 0] = Math.random() * limitToBounce - limitToBounce * 0.5;
+			data[i + 1] = Math.random() * limitToBounce - limitToBounce * 0.5;
+			data[i + 2] = Math.random() * limitToBounce - limitToBounce * 0.5;
+		}
+
+		var texture = new THREE.DataTexture( data, width, height, THREE.RGBFormat, THREE.FloatType );
+		texture.minFilter = THREE.NearestFilter;
+		texture.magFilter = THREE.NearestFilter;
+		texture.generateMipmaps = false;
+		texture.needsUpdate = true;
+
+		return texture;
+
+	}
+
+	function resizePass() {
+
+		composerPos.setSize( numParticles, numParticles );
+		composerVel.setSize( numParticles, numParticles );
+
+	}
+
+	var ready = false;
+	function renderPass() {
+
+		if ( composerPos.copyPass.isLoaded() && composerVel.copyPass.isLoaded() && !ready ) {
+
+			ready = true;
+			composerVel.setSource( velPass.params.initialData );
+			composerPos.setSource( posPass.params.initialData );
+
+		}
+
+		if ( ready ) {
+
+            velPass.params.tPos = composerPos.output;
+			composerVel.pass( velPass );
+			posPass.params.tVel = composerVel.output
+			composerPos.pass( posPass );
+			material.uniforms.texture.value = composerPos.output;
+			renderer.render( scene, camera );
+
+		}
+
+	}
+
+</script>
+
+</body>
+</html>
