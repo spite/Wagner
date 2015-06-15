@@ -2,7 +2,7 @@ WAGNER.HalftonePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'HalftonePass Pass constructor' );
-	this.loadShader( 'halftone-fs.glsl', function() {
+	this.loadShader( 'halftone-fs', function() {
 		this.shader.uniforms.pixelSize.value = 6;
 	} );
 

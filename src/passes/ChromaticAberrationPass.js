@@ -12,7 +12,7 @@ WAGNER.ChromaticAberrationPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'ChromaticAberrationPass Pass constructor' );
-	this.loadShader( 'chromatic-aberration-fs.glsl' );
+	this.loadShader( 'chromatic-aberration-fs' );
 
 };
 

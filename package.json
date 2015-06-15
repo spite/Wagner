@@ -1,0 +1,25 @@
+{
+  "name": "Wagner",
+  "version": "0.0.1",
+  "description": "Effects composer for three.js",
+  "author": {
+    "name": "Jaume Sanchez"
+  },
+  "license": "MIT",
+  "main": "dist/wagner.js",
+  "license": "MIT",
+  "keywords": [
+    "webgl",
+    "threejs",
+    "effects",
+    "composer"
+  ],
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-connect": "^0.10.1",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-neuter": "~0.6.0",
+    "jit-grunt": "^0.9.1"
+  }
+}

@@ -2,7 +2,7 @@ WAGNER.BlendPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'BlendPass constructor' );
-	this.loadShader( 'blend-fs.glsl' );
+	this.loadShader( 'blend-fs' );
 
 	this.params.mode = 1;
 	this.params.opacity = 1;
@@ -50,7 +50,7 @@ WAGNER.BlendPass.prototype.run = function( c ) {
 	this.shader.uniforms.sizeMode.value = this.params.sizeMode;
 	this.shader.uniforms.aspectRatio.value = this.params.aspectRatio;
 	this.shader.uniforms.aspectRatio2.value = this.params.aspectRatio2;
-	
+
 	c.pass( this.shader );
 
 };

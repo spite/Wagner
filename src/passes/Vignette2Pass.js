@@ -2,7 +2,7 @@ WAGNER.Vignette2Pass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Vignette Pass constructor' );
-	this.loadShader( 'vignette2-fs.glsl' );
+	this.loadShader( 'vignette2-fs' );
 
 	this.params.boost = 2;
 	this.params.reduction = 2;

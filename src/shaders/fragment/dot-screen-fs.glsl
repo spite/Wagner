@@ -1,10 +1,8 @@
-/**
- * @author alteredq / http://alteredqualia.com/
- *
- * Dot screen shader
- * based on glfx.js sepia shader
- * https://github.com/evanw/glfx.js
- */
+// @author alteredq / http://alteredqualia.com/
+//
+// Dot screen shader
+// based on glfx.js sepia shader
+// https://github.com/evanw/glfx.js
 
 uniform sampler2D tInput;
 uniform vec2 resolution;

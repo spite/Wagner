@@ -2,8 +2,8 @@ WAGNER.DirectionalBlurPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Directional Blur Pass constructor' );
-	this.loadShader( 'guided-directional-blur-fs.glsl', function( fs ) {
-		
+	this.loadShader( 'guided-directional-blur-fs', function( fs ) {
+
 	} );
 
 	this.params.tBias = null;

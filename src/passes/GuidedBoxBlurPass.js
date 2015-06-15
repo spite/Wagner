@@ -2,7 +2,7 @@ WAGNER.GuidedBoxBlurPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'GuidedBoxBlurPass Pass constructor' );
-	this.loadShader( 'guided-box-blur2-fs.glsl' );
+	this.loadShader( 'guided-box-blur2-fs' );
 
 	this.params.tBias = null;
 	this.params.delta = new THREE.Vector2( 1., 0 );

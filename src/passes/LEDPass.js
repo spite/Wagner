@@ -2,8 +2,8 @@ WAGNER.LEDPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'LEDPass Pass constructor' );
-	this.loadShader( 'led-fs.glsl', function() {
-		
+	this.loadShader( 'led-fs', function() {
+
 		//this.shader.uniforms.noiseTexture.value = 1;
 	} );
 

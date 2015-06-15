@@ -2,7 +2,7 @@ WAGNER.CrossFadePass = function() {
 
   WAGNER.Pass.call( this );
   WAGNER.log( 'CrossFadePass Pass constructor' );
-  this.loadShader( 'crossfade-fs.glsl' );
+  this.loadShader( 'crossfade-fs' );
 
   this.params.tInput2 = null;
   this.params.tFadeMap = null;

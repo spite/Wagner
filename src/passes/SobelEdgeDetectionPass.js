@@ -2,7 +2,7 @@ WAGNER.SobelEdgeDetectionPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'SobelEdgeDetectionPass Pass constructor' );
-	this.loadShader( 'sobel-fs.glsl' );
+	this.loadShader( 'sobel-fs' );
 
 };
 

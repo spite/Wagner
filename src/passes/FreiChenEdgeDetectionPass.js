@@ -2,7 +2,7 @@ WAGNER.FreiChenEdgeDetectionPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'FreiChenEdgeDetectionPass Pass constructor' );
-	this.loadShader( 'frei-chen-fs.glsl' );
+	this.loadShader( 'frei-chen-fs' );
 
 };
 

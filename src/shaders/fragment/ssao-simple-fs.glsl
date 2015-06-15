@@ -8,16 +8,15 @@ uniform float strength;
 
 // -------------
 
-/*
-SSAO GLSL shader v1.2
-assembled by Martins Upitis (martinsh) (devlog-martinsh.blogspot.com)
-original technique is made by Arkano22 (www.gamedev.net/topic/550699-ssao-no-halo-artifacts/)
+// SSAO GLSL shader v1.2
+// assembled by Martins Upitis (martinsh) (devlog-martinsh.blogspot.com)
+// original technique is made by Arkano22 (www.gamedev.net/topic/550699-ssao-no-halo-artifacts/)
+//
+// changelog:
+// 1.2 - added fog calculation to mask AO. Minor fixes.
+// 1.1 - added spiral sampling method from here:
+// (http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere)
 
-changelog:
-1.2 - added fog calculation to mask AO. Minor fixes.
-1.1 - added spiral sampling method from here:
-(http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere)
-*/
 //uniform sampler2D bgl_RenderedTexture;
 
 #define PI    3.14159265
@@ -173,20 +172,19 @@ void main(void)
     ao = mix(ao, 1.0, doMist());
   }
 
-  /*
-  vec3 color = texture2D(bgl_RenderedTexture,texCoord).rgb;
+  // vec3 color = texture2D(bgl_RenderedTexture,texCoord).rgb;
 
-  vec3 lumcoeff = vec3(0.299,0.587,0.114);
-  float lum = dot(color.rgb, lumcoeff);
-  vec3 luminance = vec3(lum, lum, lum);
+  // vec3 lumcoeff = vec3(0.299,0.587,0.114);
+  // float lum = dot(color.rgb, lumcoeff);
+  // vec3 luminance = vec3(lum, lum, lum);
 
-  vec3 final = vec3(color*mix(vec3(ao),vec3(1.0),luminance*lumInfluence));//mix(color*ao, white, luminance)
+  // vec3 final = vec3(color*mix(vec3(ao),vec3(1.0),luminance*lumInfluence));//mix(color*ao, white, luminance)
 
-  if (onlyAO)
-  {
-  final = vec3(mix(vec3(ao),vec3(1.0),luminance*lumInfluence)); //ambient occlusion only
-  }
-  */
+  // if (onlyAO)
+  // {
+  // final = vec3(mix(vec3(ao),vec3(1.0),luminance*lumInfluence)); //ambient occlusion only
+  // }
+
   //vec3 final = vec3(depth/1.0);
   vec3 final = vec3(depth);
 

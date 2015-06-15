@@ -2,7 +2,7 @@ WAGNER.DOFPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'DOFPass Pass constructor' );
-	this.loadShader( 'dof-fs.glsl' );
+	this.loadShader( 'dof-fs' );
 
 	this.params.focalDistance = 0;
 	this.params.aperture = .005;

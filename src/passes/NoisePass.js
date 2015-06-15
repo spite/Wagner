@@ -2,7 +2,7 @@ WAGNER.NoisePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Noise Pass constructor' );
-	this.loadShader( 'noise-fs.glsl' );
+	this.loadShader( 'noise-fs' );
 
 	this.params.amount = 0.1;
 	this.params.speed = 0;

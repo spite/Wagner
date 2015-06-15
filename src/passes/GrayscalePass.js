@@ -2,7 +2,7 @@ WAGNER.GrayscalePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'GrayscalePass Pass constructor' );
-	this.loadShader( 'grayscale-fs.glsl' );
+	this.loadShader( 'grayscale-fs' );
 
 };
 

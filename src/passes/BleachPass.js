@@ -2,8 +2,8 @@ WAGNER.BleachPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Bleach Pass constructor' );
-	this.loadShader( 'bleach-fs.glsl', function( fs ) {
-		
+	this.loadShader( 'bleach-fs', function( fs ) {
+
 	} );
 
 	this.params.amount = 1;

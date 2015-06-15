@@ -2,7 +2,7 @@ WAGNER.PixelatePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'PixelatePass Pass constructor' );
-	this.loadShader( 'pixelate-fs.glsl' );
+	this.loadShader( 'pixelate-fs' );
 
 	this.params.amount = 320;
 

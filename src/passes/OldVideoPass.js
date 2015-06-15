@@ -2,7 +2,7 @@ WAGNER.OldVideoPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'OldVideoPass Pass constructor' );
-	this.loadShader( 'old-video-fs.glsl' );
+	this.loadShader( 'old-video-fs' );
 
 };
 

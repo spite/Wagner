@@ -2,7 +2,7 @@ WAGNER.RGBSplitPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'RGBSplitPass Pass constructor' );
-	this.loadShader( 'rgb-split-fs.glsl', function() {
+	this.loadShader( 'rgb-split-fs', function() {
 	} );
 
 	this.params.delta = new THREE.Vector2();

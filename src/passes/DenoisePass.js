@@ -2,7 +2,7 @@ WAGNER.DenoisePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Denoise Pass constructor' );
-	this.loadShader( 'denoise-fs.glsl' );
+	this.loadShader( 'denoise-fs' );
 
 	this.params.exponent = 5;
 	this.params.strength = 10;

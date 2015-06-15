@@ -2,7 +2,7 @@ WAGNER.ToonPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'ToonPass Pass constructor' );
-	this.loadShader( 'toon-fs.glsl' );
+	this.loadShader( 'toon-fs' );
 
 };
 

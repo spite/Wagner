@@ -2,7 +2,7 @@ WAGNER.BrightnessContrastPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'BrightnessContrastPass constructor' );
-	this.loadShader( 'brightness-contrast-fs.glsl' );
+	this.loadShader( 'brightness-contrast-fs' );
 
 	this.params.brightness = 1;
 	this.params.contrast = 1;

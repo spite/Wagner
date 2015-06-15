@@ -2,7 +2,7 @@ WAGNER.SimpleSSAOPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'SimpleSSAOPass Pass constructor' );
-	this.loadShader( 'ssao-simple-fs.glsl', function( fs ) {
+	this.loadShader( 'ssao-simple-fs', function( fs ) {
 	} );
 
 	this.params.texture = null;

@@ -2,7 +2,7 @@ WAGNER.BarrelBlurPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'BarrelBlurPass Pass constructor' );
-	this.loadShader( 'barrel-blur-fs.glsl' );
+	this.loadShader( 'barrel-blur-fs' );
 
 };
 

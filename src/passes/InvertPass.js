@@ -2,7 +2,7 @@ WAGNER.InvertPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'InvertPass constructor' );
-	this.loadShader( 'invert-fs.glsl' );
+	this.loadShader( 'invert-fs' );
 
 };
 

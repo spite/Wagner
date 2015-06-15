@@ -1,0 +1,30 @@
+# Numerous always-ignore extensions
+*.diff
+*.err
+*.orig
+*.rej
+*.swo
+*.swp
+*.vi
+*~
+*.psd
+
+# OS or Editor folders
+.DS_Store
+Thumbs.db
+.cache
+.project
+.pydevproject
+.settings
+.tmproj
+*.esproj
+nbproject
+*.sublime-project
+*.sublime-workspace
+
+# npm
+node_modules
+
+# dist
+src/shaders/all.js
+dist/*.min.js

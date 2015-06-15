@@ -2,7 +2,7 @@ WAGNER.Halftone2Pass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Halftone2Pass Pass constructor' );
-	this.loadShader( 'halftone2-fs.glsl' );
+	this.loadShader( 'halftone2-fs' );
 
 	this.params.amount = 128;
 	this.params.smoothness = .25;

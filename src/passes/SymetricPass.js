@@ -2,7 +2,7 @@ WAGNER.SymetricPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'SymetricPass constructor' );
-	this.loadShader( 'symetric-fs.glsl' );
+	this.loadShader( 'symetric-fs' );
 
 	this.params.xReverse = false;
 	this.params.yReverse = false;

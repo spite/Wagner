@@ -2,8 +2,8 @@ WAGNER.SSAOPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'SSAOPass Pass constructor' );
-	this.loadShader( 'ssao-fs.glsl', function( fs ) {
-		
+	this.loadShader( 'ssao-fs', function( fs ) {
+
 		/*this.shader.uniforms.pSphere.value = [
 			new THREE.Vector3(-0.010735935, 0.01647018, 0.0062425877),
 			new THREE.Vector3(-0.06533369, 0.3647007, -0.13746321),
@@ -16,7 +16,7 @@ WAGNER.SSAOPass = function() {
 			new THREE.Vector3(0.8765323, 0.011236004, 0.28265962),
 			new THREE.Vector3(0.29264435, -0.40794238, 0.15964167)
 		];*/
-		
+
 	} );
 
 	this.params.texture = null;
@@ -53,7 +53,7 @@ WAGNER.SSAOPass.prototype.run = function( c ) {
 
 	if( this.params.onlyOcclusion ) {
 		c.setSource( this.composer.output );
-	} else {		
+	} else {
 		this.blendPass.params.mode = WAGNER.BlendMode.Multiply;
 		this.blendPass.params.tInput2 = this.composer.output;
 

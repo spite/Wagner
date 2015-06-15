@@ -105,7 +105,7 @@ WAGNER.Pass.prototype.loadShader = function( id, c ) {
 
 	var self = this;
 	var vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }';
-	WAGNER.loadShader( WAGNER.fragmentShadersPath + '/' + id, function( fs ) {
+	WAGNER.loadShader( id, function( fs ) {
 		self.shader = WAGNER.processShader( vs, fs );
 		//self.mapUniforms( self.shader.uniforms );
 		if( c ) c.apply( self );

@@ -2,7 +2,7 @@ WAGNER.SepiaPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'SepiaPass constructor' );
-	this.loadShader( 'sepia-fs.glsl' );
+	this.loadShader( 'sepia-fs' );
 
 	this.params.amount = 1;
 

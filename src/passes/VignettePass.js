@@ -2,7 +2,7 @@ WAGNER.VignettePass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'Vignette Pass constructor' );
-	this.loadShader( 'vignette-fs.glsl' );
+	this.loadShader( 'vignette-fs' );
 
 	this.params.amount = 1;
 	this.params.falloff = 0.1;

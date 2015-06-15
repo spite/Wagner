@@ -2,7 +2,7 @@ WAGNER.CopyPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'CopyPass constructor' );
-	this.loadShader( 'copy-fs.glsl' );
+	this.loadShader( 'copy-fs' );
 
 };
 

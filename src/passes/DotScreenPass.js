@@ -2,7 +2,7 @@ WAGNER.DotScreenPass = function() {
 
 	WAGNER.Pass.call( this );
 	WAGNER.log( 'DotScreenPass Pass constructor' );
-	this.loadShader( 'dot-screen-fs.glsl' );
+	this.loadShader( 'dot-screen-fs' );
 
 };
 
