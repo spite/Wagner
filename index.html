@@ -38,10 +38,10 @@
 <!--<script src="js/OculusRiftEffect.js"></script>-->
 <!--<script src="http://spite.github.io/rstats/rStats.js" ></script>
 <script src="http://spite.github.io/rstats/rStats.extras.js" ></script>-->
-<script src="Wagner.js"></script>
-<script src="Wagner.base.js"></script>
+<script src="dist/wagner.shaders.js"></script>
+<script src="dist/wagner.js"></script>
 <!--<script src="Wagner.experimental.js"></script>-->
-<script src="ShaderLoader.js"></script>
+{# <script src="ShaderLoader.js"></script> #}
 <script src="js/debugTools.js"></script>
 
 <script>
@@ -78,7 +78,7 @@ var controls;
 
 var composerSim;
 
-var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, 
+var invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass,
 	sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, sobelEdgeDetectionPass,
 	dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass,
 	artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass, dotScreenPass,
@@ -92,8 +92,8 @@ var particles, particleMaterial;
 
 var depthTexture, normalTexture, colorTexture, uvTexture, scaledTexture, glowTexture;
 var depthMaterial;// = new THREE.MeshDepthMaterial();
-var modelMaterial = new THREE.MeshPhongMaterial( { 
-	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324.jpg' ), 
+var modelMaterial = new THREE.MeshPhongMaterial( {
+	map: THREE.ImageUtils.loadTexture( 'assets/textures/1324.jpg' ),
 	normalMap: THREE.ImageUtils.loadTexture( 'assets/textures/1324-normal.jpg' ),
 	normalScale: new THREE.Vector2( .8, -.8 ),
 	shininess: 100
@@ -112,21 +112,21 @@ var uvMaterial = new THREE.MeshBasicMaterial();
 } );*/
 //modelMaterial = new THREE.MeshNormalMaterial();
 
-var sL = new ShaderLoader()
-sL.add( 'depth-vs', 'vertex-shaders/packed-depth-vs.glsl' );
-sL.add( 'depth-fs', 'fragment-shaders/packed-depth-fs.glsl' );
-sL.load();
-sL.onLoaded( function() {
+// var sL = new ShaderLoader()
+// sL.add( 'depth-vs', 'vertex-shaders/packed-depth-vs.glsl' );
+// sL.add( 'depth-fs', 'fragment-shaders/packed-depth-fs.glsl' );
+// sL.load();
+// sL.onLoaded( function() {
 	depthMaterial = new THREE.ShaderMaterial( {
 		uniforms: {
 			mNear: { type: 'f', value: 1 },
 			mFar: { type: 'f', value: 1000 }
 		},
-		vertexShader: this.get( 'depth-vs' ),
-		fragmentShader: this.get( 'depth-fs' ),
+		vertexShader: WAGNER.loadShader( 'packed-depth-vs' ),
+		fragmentShader: WAGNER.loadShader( 'packed-depth-fs' ),
 		shading: THREE.SmoothShading
 	} );
-} );
+// } );
 
 /*var sL = new ShaderLoader()
 sL.add( 'uv-vs', 'vertex-shaders/packed-depth-vs.glsl' );
@@ -163,13 +163,13 @@ document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( 
 window.addEventListener( 'load', function() {
 
 	init();
-	
+
 } );
 
 function init() {
 
 	container = document.getElementById( 'container' );
-	
+
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -193,14 +193,14 @@ function init() {
 	var useTeapot = false;
 
 	if( useTeapot ) {
-		
+
 		var loader = new THREE.JSONLoader();
-		loader.load( 'assets/models/LeePerrySmith.js', function( data ) { 
+		loader.load( 'assets/models/LeePerrySmith.js', function( data ) {
 			data.computeCentroids();
 			data.computeFaceNormals();
 			data.computeVertexNormals();
 			THREE.GeometryUtils.center( data );
-			model = new THREE.Mesh( 
+			model = new THREE.Mesh(
 				data,
 				modelMaterial
 			);
@@ -213,8 +213,8 @@ function init() {
 
 	} else {
 
-		/*model = new THREE.Mesh( 
-			new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ), 
+		/*model = new THREE.Mesh(
+			new THREE.TorusKnotGeometry( 300, 100, 200, 50, 1, 3 ),
 			modelMaterial
 		);
 		model.material.map.wrapS = model.material.map.wrapT = THREE.RepeatWrapping;
@@ -306,7 +306,7 @@ function init() {
 	halftonePass = new WAGNER.HalftonePass();
 	//halftoneCMYKPass = new WAGNER.HalftoneCMYKPass();
 	ssaoPass = new WAGNER.SSAOPass();
-	
+
 	multiPassBloomPass.params.blurAmount = 2;
 	guidedFullBoxBlurPass.params.amount = 20;
 	guidedFullBoxBlurPass.params.invertBiasMap = true;
@@ -315,7 +315,7 @@ function init() {
 	//crossHatchingPass = new WAGNER.CrossHatchingPass();
 	//draganPass = new WAGNER.DraganPass();
 	//artPass = new WAGNER.ArtPass();
-	
+
 	/*var w = 2048, h = 2048;
 	composerSim = new WAGNER.SimComposer( renderer, { width: w, height: h, shader: 'particles-snow-fs.glsl' } );
 	var geometry = new THREE.Geometry();
@@ -365,14 +365,14 @@ function init() {
 
 	mesh = new THREE.Mesh(
 		new THREE.CubeGeometry( 100, 100, 100 ),
-		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'assets/snapshot.jpg' ) } ) 
+		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'assets/snapshot.jpg' ) } )
 	);
 	scene.add( mesh );*/
 
 	onWindowResize();
 
 	render();
-	
+
 }
 
 var tTexture;
@@ -400,7 +400,7 @@ var startTime = Date.now();
 var copy = true;
 
 function render() {
-	
+
 	var t = .001 * Date.now();
 
 	/*rS( 'frame' ).start();
@@ -413,7 +413,7 @@ function render() {
 	    /*model.rotation.x += .001;
 	    model.rotation.y += .001;
 	    model.rotation.z += .005;*/
-	
+
 		renderer.autoClearColor = true;
 		composer.reset();
 
@@ -424,7 +424,7 @@ function render() {
 		composer.render( scene, camera );
 
 		guidedFullBoxBlurPass.params.tBias = depthTexture;
-		
+
 		composer.pass( multiPassBloomPass );
 		composer.pass( guidedFullBoxBlurPass );
 		composer.pass( dirtPass );
@@ -441,10 +441,10 @@ function render() {
 
 	requestAnimationFrame( render );
 	startTime = t;
-	
+
 }
 
 </script>
-		
+
 	</body>
 </html>

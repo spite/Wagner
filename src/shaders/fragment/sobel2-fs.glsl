@@ -1,11 +1,9 @@
-/**
- * @author zz85 / https://github.com/zz85 | https://www.lab4games.net/zz85/blog
- *
- * Edge Detection Shader using Sobel filter
- * Based on http://rastergrid.com/blog/2011/01/frei-chen-edge-detector
- *
- * aspect: vec2 of (1/width, 1/height)
- */
+// @author zz85 / https://github.com/zz85 | https://www.lab4games.net/zz85/blog
+//
+// Edge Detection Shader using Sobel filter
+// Based on http://rastergrid.com/blog/2011/01/frei-chen-edge-detector
+//
+// aspect: vec2 of (1/width, 1/height)
 
 uniform sampler2D tInput;
 varying vec2 vUv;
@@ -26,7 +24,7 @@ void main(void) {
 	G[0] = g0;
 	G[1] = g1;
 
-	/* fetch the 3x3 neighbourhood and use the RGB vector's length as intensity value */
+	// fetch the 3x3 neighbourhood and use the RGB vector's length as intensity value
 	for (float i=0.0; i<3.0; i++) {
 		for (float j=0.0; j<3.0; j++) {
 			sample = texture2D( tInput, vUv + texel * vec2(i-1.0,j-1.0) ).rgb;
@@ -34,7 +32,7 @@ void main(void) {
 		}
 	}
 
-	/* calculate the convolution values for all the masks */
+	// calculate the convolution values for all the masks
 	for (int i=0; i<2; i++) {
 		float dp3 = dot(G[i][0], I[0]) + dot(G[i][1], I[1]) + dot(G[i][2], I[2]);
 		cnv[i] = dp3 * dp3;
