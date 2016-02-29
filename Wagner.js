@@ -40,7 +40,7 @@ WAGNER.Composer = function( renderer, settings ) {
 		type: this.settings.type !== undefined ? this.settings.type : THREE.UnsignedByteType,
 		stencilBuffer: this.settings.stencilBuffer !== undefined ? this.settings.stencilBuffer : true
 	});
-	
+
 	this.back = this.front.clone();
 
 	this.startTime = Date.now();
@@ -58,7 +58,7 @@ WAGNER.Composer.prototype.linkPass = function( id, pass ) {
 			return this.message;
 		};
 	}
-	
+
 	if( this.passes[ id ] ) {
 		throw new WagnerLoadPassException( id, pass );
 	}
@@ -130,7 +130,7 @@ WAGNER.Composer.prototype.pass = function( pass ) {
 		}
 
 		if( !pass.isSim ) this.quad.material.uniforms.tInput.value = this.read;
-		
+
 		this.quad.material.uniforms.resolution.value.set( this.width, this.height );
 		this.quad.material.uniforms.time.value = 0.001 * ( Date.now() - this.startTime );
 		this.renderer.render( this.scene, this.camera, this.write, false );
@@ -224,18 +224,18 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 
 	WAGNER.log( 'Processing Shader | Performing uniform Reflection...' );
 
-	var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi; 
+	var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
 	var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
 
 	var typesMap = {
-		
+
 		sampler2D: { type: 't', value: function() { return new THREE.Texture(); } },
 		samplerCube: { type: 't', value: function() {} },
 
 		bool:  { type: 'b', value: function() { return 0; } },
 		int:   { type: 'i', value: function() { return 0; } },
 		float: { type: 'f', value: function() { return 0; } },
-		
+
 		vec2: { type: 'v2', value: function() { return new THREE.Vector2(); } },
 		vec3: { type: 'v3', value: function() { return new THREE.Vector3(); } },
 		vec4: { type: 'v4', value: function() { return new THREE.Vector4(); } },
@@ -267,7 +267,7 @@ WAGNER.processShader = function( vertexShaderCode, fragmentShaderCode ) {
 	};
 
   var uniformType, uniformName, arraySize;
-  
+
 	while( ( matches = regExp.exec( fragmentShaderCode ) ) !== null) {
 		if( matches.index === regExp.lastIndex) {
 			regExp.lastIndex++;
@@ -342,10 +342,10 @@ WAGNER.Pass.prototype.mapUniforms = function( uniforms ) {
 	for( var j in uniforms ) {
 		if( !uniforms[ j ].default ) {
 			(function( id ) {
-				Object.defineProperty( params, id, { 
-					get : function(){ return uniforms[ id ].value; }, 
+				Object.defineProperty( params, id, {
+					get : function(){ return uniforms[ id ].value; },
 					set : function( v ){ uniforms[ id ].value = v; },
-					configurable : false 
+					configurable : false
 				} );
 			})( j );
 		}
@@ -361,7 +361,7 @@ WAGNER.Pass.prototype.run = function( c ) {
 };
 
 WAGNER.Pass.prototype.isLoaded = function() {
-	
+
 	if( this.loaded === null ) {
 		if( this.shader instanceof THREE.ShaderMaterial ) {
 			this.loaded = true;
@@ -374,9 +374,9 @@ WAGNER.Pass.prototype.isLoaded = function() {
 
 WAGNER.Pass.prototype.getOfflineTexture = function( w, h, useRGBA ){
 
-	var rtTexture = new THREE.WebGLRenderTarget( w, h, { 
-		minFilter: THREE.LinearFilter, 
-		magFilter: THREE.LinearFilter, 
+	var rtTexture = new THREE.WebGLRenderTarget( w, h, {
+		minFilter: THREE.LinearFilter,
+		magFilter: THREE.LinearFilter,
 		format: useRGBA?THREE.RGBAFormat:THREE.RGBFormat
 	} );
 
@@ -424,14 +424,13 @@ WAGNER.Stack.prototype.addPass = function ( shaderName, enabled, params, index )
     var length,
     	passItem = {
 	        shaderName: shaderName,
-	        enabled: enabled || false
+	        enabled: enabled || false,
+	        params: params
 	    };
-
-	//todo: use and store params values
 
     this.passItems.push( passItem );
     length = this.passItems.length;
-    
+
     this.updatePasses();
 
     if ( index ) {
@@ -477,7 +476,7 @@ WAGNER.Stack.prototype.movePassToIndex = function ( index, destIndex ) {
 
     this.passItems.splice( destIndex, 0, this.passItems.splice( index, 1 )[ 0 ] );
     this.updatePasses();
-    return destIndex; //TODO: check if destIndex is final index
+    return destIndex; //#TODO:180 check if destIndex is final index
 
 };
 
@@ -540,7 +539,7 @@ WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
 
             if ( passItem.enabled ) {
 
-            	pass = this.getShaderFromPool( passItem.shaderName );
+            	pass = this.getShaderFromPool( passItem.shaderName, passItem.params );
 
             	if ( passItem.params ) {
 
@@ -560,7 +559,7 @@ WAGNER.ShadersPool.prototype.getPasses = function ( passItems ) {
 
 };
 
-WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName ) {
+WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName, params ) {
 
     var pass,
         shaderItem;
@@ -578,12 +577,12 @@ WAGNER.ShadersPool.prototype.getShaderFromPool = function ( shaderName ) {
                 break;
 
             }
-    		
+
     	};
 
         if ( !pass ) {
 
-            pass = new WAGNER[ shaderName ]();
+            pass = new WAGNER[ shaderName ]( params );
 
             shaderItem = {
                 pass: pass,
@@ -622,7 +621,7 @@ WAGNER.ShadersPool.prototype.extendParams = function(target, source) {
     }
 
     return obj;
-    
+
 }
 
 
