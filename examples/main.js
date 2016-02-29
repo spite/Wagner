@@ -86,22 +86,22 @@ function init() {
 
 	light.castShadow = true;
 
-	light.shadowCameraNear = 1200;
-	light.shadowCameraFar = 2500;
-	light.shadowCameraFov = 90;
+	light.shadow.camera.near = 1200;
+	light.shadow.camera.far = 2500;
+	light.shadow.camera.fov = 90;
 
 	//light.shadowCameraVisible = true;
 
-	light.shadowBias = 0.0001;
-	light.shadowDarkness = 0.5;
+	light.shadow.bias = 0.0001;
+	light.shadow.darkness = 0.5;
 
-	light.shadowMapWidth = SHADOW_MAP_WIDTH;
-	light.shadowMapHeight = SHADOW_MAP_HEIGHT;
+	light.shadow.mapSize.width = SHADOW_MAP_WIDTH;
+	light.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
 
 	scene.add( light );
 
-	renderer.shadowMapEnabled = true;
-	renderer.shadowMapType = THREE.PCFShadowMap;
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFShadowMap;
 
 	initPass();
 
@@ -127,7 +127,7 @@ function createTeapot() {
 	loader.load( '../assets/models/teapot.js', function( data ) { 
 		data.computeFaceNormals();
 		data.computeVertexNormals();
-		THREE.GeometryUtils.center( data );
+		data.center();
 		model = new THREE.Mesh( 
 			data,
 			modelMaterial
