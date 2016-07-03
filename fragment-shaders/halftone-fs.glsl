@@ -19,7 +19,7 @@ void main(void) {
 	p.x -= dx;
 	p.y -= dy;
 	vec3 col = texture2D(tInput, p).rgb;
-	vec3 luma = vec3( .299, 0.587, 0.114 );
+	vec3 luma = vec3( .213, .715, .072 );
 	float bright = dot( col.rgb, luma );
 	
 	float dist = sqrt(dx*dx + dy*dy);

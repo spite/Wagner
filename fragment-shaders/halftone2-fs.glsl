@@ -31,7 +31,7 @@ void main(void) {
   vec2 d = vec2( 1. / amount ) * vec2( 1., ar );
   vec2 tUv = floor( vUv / d ) * d;
   vec3 dotColorCalculation = texture2D( tInput, tUv ).rgb;
-  vec3 luma = vec3( .299, 0.587, 0.114 );
+  vec3 luma = vec3( .213, .715, .072 );
   vec3 gradientColor = dotColorCalculation ;//texture2D( tInput, vUv ).rgb;
   float radius = sqrt( dot( dotColorCalculation, luma ) );
 

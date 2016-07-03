@@ -7,7 +7,7 @@ float random(vec3 scale,float seed){return fract(sin(dot(gl_FragCoord.xyz+seed,s
 
 float sampleBias( vec2 uv ) {
 	//return texture2D( tBias, uv ).r;
-	vec3 luma = vec3( .299, 0.587, 0.114 );
+	vec3 luma = vec3( .213, .715, .072 );
 	return dot( texture2D( tBias, uv ).rgb, luma );
 }
 

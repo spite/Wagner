@@ -27,7 +27,7 @@ void main() {
   vec3 rgbSE = texture2D(tInput, vertTexcoord.xy + (vec2(+1.0, +1.0) * texcoordOffset)).xyz;
   vec3 rgbM  = texture2D(tInput, vertTexcoord.xy).xyz;
 	
-  vec3 luma = vec3(0.299, 0.587, 0.114);
+  vec3 luma = vec3( .213, .715, .072 );
   float lumaNW = dot(rgbNW, luma);
   float lumaNE = dot(rgbNE, luma);
   float lumaSW = dot(rgbSW, luma);

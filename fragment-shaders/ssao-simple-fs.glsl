@@ -176,7 +176,7 @@ void main(void)
   /*
   vec3 color = texture2D(bgl_RenderedTexture,texCoord).rgb;
 
-  vec3 lumcoeff = vec3(0.299,0.587,0.114);
+  vec3 lumcoeff = vec3(0.213, 0.715, 0.072);
   float lum = dot(color.rgb, lumcoeff);
   vec3 luminance = vec3(lum, lum, lum);
 
