@@ -16,7 +16,7 @@ void main() {
     vec3 rgbSE = texture2D( tInput, ( vUv.xy + vec2( 1.0, 1.0 ) * res ) ).xyz;
     vec4 rgbaM  = texture2D( tInput,  vUv.xy  * res );
     vec3 rgbM  = rgbaM.xyz;
-    vec3 luma = vec3( 0.299, 0.587, 0.114 );
+    vec3 luma = vec3( .213, .715, .072 );
 
     float lumaNW = dot( rgbNW, luma );
     float lumaNE = dot( rgbNE, luma );

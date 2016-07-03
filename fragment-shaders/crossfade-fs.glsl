@@ -12,7 +12,7 @@ void main( void ) {
 	float range = .2;
 	vec4 from = texture2D( tInput, vUv );
 	vec4 to = texture2D( tInput2, vUv );
-	vec3 luma = vec3( .299, 0.587, 0.114 );
+	vec3 luma = vec3( .213, .715, .072 );
 	float v = clamp( dot( luma, texture2D( tFadeMap, vUv ).rgb ), 0., 1. - range );
 
 	float threshold = 0.1;
